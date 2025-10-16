@@ -4,7 +4,7 @@ services:
     image: postgres:alpine
     container_name: db_prod
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres_prod_data:/var/lib/postgresql/data/
     env_file:
       - .env.prod
     healthcheck:
@@ -33,9 +33,11 @@ services:
       target: prod # Use the 'prod' stage from the frontend Dockerfile
     ports:
       - "80:80" # Expose Nginx port
+    env_file:
+      - .env.prod
     depends_on:
       - backend
 
 volumes:
-  postgres_data:
+  postgres_prod_data:
 
