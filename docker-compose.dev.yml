@@ -1,0 +1,51 @@
+# Development Environment Configuration
+# Uses volumes to mount local code for hot-reloading.
+services:
+  db:
+    image: postgres:alpine
+    container_name: db_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432" # Expose PostgreSQL port for local debugging if needed
+    env_file:
+      - ./.env.dev
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: backend_dev
+    build:
+      context: ./backend
+      target: dev # Use the 'dev' stage from the backend Dockerfile
+    volumes:
+      - ./backend:/backend # Mount local 'backend' folder into the container
+      - /backend/.venv # Don't mount local .venv, use the one in the container
+
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend_dev
+    build:
+      context: ./frontend
+      target: dev # Use the 'dev' stage from the frontend Dockerfile
+    volumes:
+      - ./frontend:/frontend # Mount local 'frontend' folder
+      - /frontend/node_modules # Don't mount local node_modules, use the one in the container
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+

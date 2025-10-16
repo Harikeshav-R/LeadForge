@@ -1,0 +1,41 @@
+# Production Environment Configuration
+services:
+  db:
+    image: postgres:alpine
+    container_name: db_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env.prod
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: backend_prod
+    build:
+      context: ./backend
+      target: prod # Use the 'prod' stage from the backend Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend_prod
+    build:
+      context: ./frontend
+      target: prod # Use the 'prod' stage from the frontend Dockerfile
+    ports:
+      - "80:80" # Expose Nginx port
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
