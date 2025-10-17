@@ -307,7 +307,7 @@ class GoogleMapsClient:
         # Perform a Text Search first, as it's generally broader
         raw_results = self._perform_paginated_search(
             search_func=self.client.places,
-            max_results=max_results * 3,  # Fetch more to have enough for filtering
+            max_results=max_results * 5,  # Fetch more to have enough for filtering
             query=query,
             location=location,
             radius=radius
