@@ -501,3 +501,18 @@ def google_maps_high_rated_search(city: str, min_rating: float = 4.0) -> dict[st
         A dictionary with search status, results, and metadata.
     """
     return _google_maps_search(city=city, min_rating=min_rating)
+
+
+# --- Example Usage ---
+if __name__ == '__main__':
+    import json
+
+    print("--- Searching for restaurants in New York with no websites ---")
+    search_result = _google_maps_search(
+        city="New York",
+        business_type="restaurant",
+        min_rating=0,
+        max_results=5,
+        exclude_websites=False
+    )
+    print(json.dumps(search_result, indent=2))
