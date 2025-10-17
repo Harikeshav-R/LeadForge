@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi[all]>=0.119.0",
+    "googlemaps>=4.10.0",
+    "loguru>=0.7.3",
     "psycopg2-binary>=2.9.11",
     "sqlalchemy>=2.0.44",
 ]
