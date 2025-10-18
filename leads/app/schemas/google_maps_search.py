@@ -6,7 +6,7 @@ class GoogleMapsSearchInput(BaseModel):
     business_type: str = Field(None, description="Business type to filter by.")
     radius: int = Field(50000, description="Radius in meters for search.")
     min_rating: float = Field(0.0, description="Minimum rating for businesses.")
-    max_results: int = Field(100, description="Maximum number of results to return.")
+    max_results: int = Field(10, description="Maximum number of results to return.")
 
 
 class Location(BaseModel):
