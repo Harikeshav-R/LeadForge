@@ -1,5 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl, EmailStr
-from pydantic_extra_types.phone_numbers import PhoneNumber
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class ContactScraperInput(BaseModel):
