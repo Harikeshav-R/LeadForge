@@ -206,7 +206,7 @@ class ContactScraper:
 
 
 @tool(args_schema=ContactScraperInput)
-def scrape_contact_information(url: str) -> ContactScraperOutput:
+def contact_scraper(url: str) -> ContactScraperOutput:
     """Scrapes a website to find and extract contact information.
 
     This tool crawls an entire website starting from the provided URL. It searches

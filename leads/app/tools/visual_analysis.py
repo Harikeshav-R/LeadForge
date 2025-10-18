@@ -110,7 +110,7 @@ class WebsiteScreenshotter:
 
 
 @tool(args_schema=VisualAnalysisInput)
-def website_screenshotter(url: str) -> VisualAnalysisOutput | str:
+def visual_analysis(url: str) -> VisualAnalysisOutput | str:
     """
     Captures screenshots of a website at desktop, tablet, and mobile resolutions
     and returns a list of base64-encoded images.
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     logger.info("--- Running Website Screenshotter Tool ---")
     test_url = "https://www.google.com"
     logger.info(f"Capturing URL: {test_url}")
-    data = website_screenshotter.run(test_url)
+    data = visual_analysis.run(test_url)
 
     if isinstance(data, VisualAnalysisOutput):
         logger.success(f"\n--- Successfully captured screenshots ---")
