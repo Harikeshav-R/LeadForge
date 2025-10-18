@@ -60,7 +60,7 @@ class GoogleMapsClient:
         "university", "veterinary_care", "zoo"
     }
 
-    def __init__(self, api_key: Optional[str]):
+    def __init__(self, api_key: Optional[str]) -> None:
         """
         Initializes the GoogleMapsClient.
 
