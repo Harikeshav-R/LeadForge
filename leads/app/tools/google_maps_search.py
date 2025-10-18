@@ -474,7 +474,7 @@ def google_maps_search(
         business_type: Optional[str] = None,
         min_rating: float = 0.0,
         max_results: int = 100,
-        exclude_websites: bool = True
+        exclude_websites: bool = False
 ) -> GoogleMapsSearchOutput:
     """
     High-level function to search for businesses using Google Maps.
@@ -542,7 +542,7 @@ def google_maps_high_rated_search(city: str, min_rating: float = 4.0) -> GoogleM
 # --- Example Usage ---
 if __name__ == '__main__':
     logger.info("--- Searching for restaurants in New York with no websites ---")
-    search_result = _google_maps_search(
+    search_result = google_maps_search.run(
         city="New York",
         business_type="restaurant",
         min_rating=0,
