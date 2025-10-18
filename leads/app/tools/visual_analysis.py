@@ -4,7 +4,7 @@ from langchain.tools import tool
 from loguru import logger
 from playwright.sync_api import sync_playwright, Error as PlaywrightError
 
-from app.schemas.visual_analysis import VisualAnalysisOutput, CapturedScreenshot, VisualAnalysisInput
+from app.schemas import VisualAnalysisOutput, CapturedScreenshot, VisualAnalysisInput
 
 
 # --- Custom Exceptions ---

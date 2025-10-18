@@ -7,8 +7,7 @@ from langchain_core.tools import tool
 from loguru import logger
 
 from app.core.config import Config
-from app.schemas.google_maps_search import GoogleMapsSearchInput, GoogleMapsSearchOutput, SearchMetadata, PlaceResult, \
-    Location
+from app.schemas import GoogleMapsSearchInput, GoogleMapsSearchOutput, SearchMetadata, PlaceResult, Location
 
 
 # --- Custom Exception Classes ---

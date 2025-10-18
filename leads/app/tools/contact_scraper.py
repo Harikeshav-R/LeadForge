@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from langchain_core.tools import tool
 from loguru import logger
 
-from app.schemas.contact_scraper import ContactScraperOutput, ContactScraperInput
+from app.schemas import ContactScraperOutput, ContactScraperInput
 
 
 class WebsiteUnreachableError(Exception):
