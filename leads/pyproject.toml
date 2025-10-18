@@ -11,7 +11,7 @@ dependencies = [
     "langchain-google-genai>=3.0.0",
     "langgraph>=1.0.0",
     "loguru>=0.7.3",
+    "playwright>=1.55.0",
     "psycopg2-binary>=2.9.11",
-    "selenium>=4.37.0",
     "sqlalchemy>=2.0.44",
 ]
