@@ -4,4 +4,14 @@ version = "0.1.0"
 description = "Agent to generate leads"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "fastapi[all]>=0.119.0",
+    "googlemaps>=4.10.0",
+    "langchain>=1.0.0",
+    "langchain-google-genai>=3.0.0",
+    "langgraph>=1.0.0",
+    "loguru>=0.7.3",
+    "psycopg2-binary>=2.9.11",
+    "selenium>=4.37.0",
+    "sqlalchemy>=2.0.44",
+]
