@@ -7,7 +7,7 @@ class ContactScraperInput(BaseModel):
 
 
 class ContactScraperOutput(BaseModel):
-    emails: list[EmailStr] = Field(default_factory=list, description="A list of unique email addresses found.")
-    phone_numbers: list[PhoneNumber] = Field(default_factory=list, description="A list of unique phone numbers found.")
+    emails: list[str] = Field(default_factory=list, description="A list of unique email addresses found.")
+    phone_numbers: list[str] = Field(default_factory=list, description="A list of unique phone numbers found.")
     social_media: list[HttpUrl] = Field(default_factory=list,
                                         description="A list of unique social media profile links found.")

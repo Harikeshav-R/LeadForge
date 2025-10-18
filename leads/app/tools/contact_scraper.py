@@ -233,11 +233,11 @@ if __name__ == '__main__':
     scraper = ContactScraper(target_url)
     contact_info = scraper.run()
 
-    if contact_info and any(contact_info.values()):
+    if contact_info:
         logger.success("\n--- Contact Information Found ---")
-        logger.success(f"Emails: {contact_info.get('emails')}")
-        logger.success(f"Phone Numbers: {contact_info.get('phone_numbers')}")
-        logger.success(f"Social Media: {contact_info.get('social_media')}")
+        logger.success(f"Emails: {contact_info.emails}")
+        logger.success(f"Phone Numbers: {contact_info.phone_numbers}")
+        logger.success(f"Social Media: {contact_info.social_media}")
         logger.success("---------------------------------")
     else:
         logger.error("Could not retrieve contact information.")
