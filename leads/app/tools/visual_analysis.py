@@ -142,7 +142,7 @@ if __name__ == '__main__':
     if isinstance(data, VisualAnalysisOutput):
         logger.success(f"\n--- Successfully captured screenshots ---")
         for item in data.root:
-            logger.success(f"Device: {item.device}, Image (first 50 chars): {item.image[:50]}...")
+            logger.success(item.model_dump_json(indent=2))
     else:
         logger.error(f"\n--- Tool returned an error ---")
-        logger.error(data)
+        logger.error(data.model_dump_json(indent=2))

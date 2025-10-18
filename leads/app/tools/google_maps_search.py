@@ -550,5 +550,5 @@ if __name__ == '__main__':
         max_results=5,
         exclude_websites=False
     )
-    logger.success(search_result)
+    logger.success(search_result.model_dump_json(indent=2))
     # print(json.dumps(search_result, indent=2))
