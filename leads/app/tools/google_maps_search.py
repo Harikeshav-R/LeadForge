@@ -7,6 +7,8 @@ from langchain_core.tools import tool
 from loguru import logger
 
 from app.core.config import Config
+from app.schemas.google_maps_search import GoogleMapsSearchInput, GoogleMapsSearchOutput, SearchMetadata, PlaceResult, \
+    Location
 
 
 # --- Custom Exception Classes ---
@@ -108,8 +110,8 @@ class GoogleMapsClient:
             logger.error(f"API error while geocoding {city}: {e}")
             raise GoogleMapsClientError(f"An API error occurred while finding {city}") from e
 
+    @staticmethod
     def _perform_paginated_search(
-            self,
             search_func: Callable[..., dict],
             max_results: int,
             **kwargs: Any
@@ -189,11 +191,11 @@ class GoogleMapsClient:
             not website.startswith("http://localhost"),
         ])
 
+    @staticmethod
     def _format_business_data(
-            self,
             place: dict[str, Any],
             details: dict[str, Any]
-    ) -> dict[str, Any]:
+    ) -> PlaceResult:
         """
         Formats raw place and details data into a structured business dictionary.
 
@@ -204,19 +206,32 @@ class GoogleMapsClient:
         Returns:
             A dictionary with standardized business information.
         """
-        return {
-            "place_id": place.get('place_id'),
-            "name": details.get('name', place.get('name')),
-            "address": details.get('formatted_address'),
-            "phone": details.get('formatted_phone_number'),
-            "website": details.get('website'),
-            "rating": details.get('rating', place.get('rating')),
-            "total_ratings": details.get('user_ratings_total', 0),
-            "category": (details.get('types') or [None])[0],
-            "price_level": details.get('price_level'),
-            "is_open": details.get('opening_hours', {}).get('open_now'),
-            "location": place.get('geometry', {}).get('location', {})
-        }
+        # return {
+        #     "place_id": place.get('place_id'),
+        #     "name": details.get('name', place.get('name')),
+        #     "address": details.get('formatted_address'),
+        #     "phone": details.get('formatted_phone_number'),
+        #     "website": details.get('website'),
+        #     "rating": details.get('rating', place.get('rating')),
+        #     "total_ratings": details.get('user_ratings_total', 0),
+        #     "category": (details.get('types') or [None])[0],
+        #     "price_level": details.get('price_level'),
+        #     "is_open": details.get('opening_hours', {}).get('open_now'),
+        #     "location": place.get('geometry', {}).get('location', {})
+        # }
+        return PlaceResult(
+            place_id=place.get("place_id"),
+            name=details.get("name", place.get("name")),
+            address=details.get("formatted_address"),
+            phone_number=details.get("formatted_phone_number"),
+            website=details.get("website"),
+            rating=details.get("rating", place.get("rating")),
+            total_ratings=details.get("user_ratings_total", 0),
+            category=details.get("types", [None])[0],
+            price_level=details.get("price_level"),
+            is_open=details.get("opening_hours", {}).get("open_now"),
+            location=Location(**place.get("geometry", {}).get("location", {}))
+        )
 
     def _process_place_results(
             self,
@@ -224,7 +239,7 @@ class GoogleMapsClient:
             min_rating: float,
             exclude_websites: bool,
             max_results: int
-    ) -> list[dict[str, Any]]:
+    ) -> list[PlaceResult]:
         """
         Processes raw search results into a final list of formatted businesses.
 
@@ -266,7 +281,7 @@ class GoogleMapsClient:
                 continue
 
             business_data = self._format_business_data(place, details)
-            if business_data["name"] and business_data["address"]:
+            if business_data.name and business_data.address:
                 businesses.append(business_data)
 
         return businesses
@@ -279,7 +294,7 @@ class GoogleMapsClient:
             min_rating: float = 0.0,
             max_results: int = 100,
             exclude_websites: bool = True
-    ) -> list[dict[str, Any]]:
+    ) -> list[PlaceResult]:
         """
         Searches for businesses in a city, applying filters and formatting results.
 
@@ -369,7 +384,7 @@ def _google_maps_search(
         min_rating: float = 0.0,
         max_results: int = 100,
         exclude_websites: bool = True
-) -> dict[str, Any]:
+) -> GoogleMapsSearchOutput:
     """
     High-level function to search for businesses using Google Maps.
 
@@ -405,41 +420,63 @@ def _google_maps_search(
             exclude_websites=exclude_websites
         )
 
-        return {
-            "status": "success",
-            "total_results": len(businesses),
-            "results": businesses,
-            "search_metadata": {**response_metadata, "api_available": True}
-        }
+        return GoogleMapsSearchOutput(
+            status="success",
+            message=None,
+            total_results=len(businesses),
+            results=businesses,
+            search_metadata=SearchMetadata(**response_metadata, api_available=True)
+        )
+        #
+        # return {
+        #     "status": "success",
+        #     "total_results": len(businesses),
+        #     "results": businesses,
+        #     "search_metadata": {**response_metadata, "api_available": True}
+        # }
 
     except (APIKeyError, LocationNotFoundError, GoogleMapsClientError) as e:
         logger.error(f"Failed to complete Google Maps search for '{city}': {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "total_results": 0,
-            "results": [],
-            "search_metadata": {**response_metadata, "api_available": False}
-        }
+        # return {
+        #     "status": "error",
+        #     "message": str(e),
+        #     "total_results": 0,
+        #     "results": [],
+        #     "search_metadata": {**response_metadata, "api_available": False}
+        # }
+        return GoogleMapsSearchOutput(
+            status="error",
+            message=str(e),
+            total_results=0,
+            results=[],
+            search_metadata=SearchMetadata(**response_metadata, api_available=False)
+        )
     except Exception as e:
         logger.critical(f"An unexpected error occurred during search: {e}", exc_info=True)
-        return {
-            "status": "error",
-            "message": "An unexpected internal error occurred.",
-            "total_results": 0,
-            "results": [],
-            "search_metadata": {**response_metadata, "api_available": False}
-        }
+        # return {
+        #     "status": "error",
+        #     "message": "An unexpected internal error occurred.",
+        #     "total_results": 0,
+        #     "results": [],
+        #     "search_metadata": {**response_metadata, "api_available": False}
+        # }
+        return GoogleMapsSearchOutput(
+            status="error",
+            message="An unexpected internal error occurred.",
+            total_results=0,
+            results=[],
+            search_metadata=SearchMetadata(**response_metadata, api_available=False)
+        )
 
 
-@tool(parse_docstring=True)
+@tool(args_schema=GoogleMapsSearchInput)
 def google_maps_search(
         city: str,
         business_type: Optional[str] = None,
         min_rating: float = 0.0,
         max_results: int = 100,
         exclude_websites: bool = True
-) -> dict[str, Any]:
+) -> GoogleMapsSearchOutput:
     """
     High-level function to search for businesses using Google Maps.
 
@@ -468,7 +505,7 @@ def google_maps_search(
 
 
 @tool(parse_docstring=True)
-def google_maps_nearby_search(city: str, business_type: str = "restaurant") -> dict[str, Any]:
+def google_maps_nearby_search(city: str, business_type: str = "restaurant") -> GoogleMapsSearchOutput:
     """
     A function to search for a specific type of business in a city.
 
@@ -486,9 +523,9 @@ def google_maps_nearby_search(city: str, business_type: str = "restaurant") -> d
 
 
 @tool(parse_docstring=True)
-def google_maps_high_rated_search(city: str, min_rating: float = 4.0) -> dict[str, Any]:
+def google_maps_high_rated_search(city: str, min_rating: float = 4.0) -> GoogleMapsSearchOutput:
     """
-    A function to find highly-rated businesses in a city.
+    A function to find highly rated businesses in a city.
 
     This is a wrapper around the main `google_maps_search` tool, pre-configured
     to filter results by a minimum rating.
@@ -505,8 +542,6 @@ def google_maps_high_rated_search(city: str, min_rating: float = 4.0) -> dict[st
 
 # --- Example Usage ---
 if __name__ == '__main__':
-    import json
-
     print("--- Searching for restaurants in New York with no websites ---")
     search_result = _google_maps_search(
         city="New York",
@@ -515,4 +550,5 @@ if __name__ == '__main__':
         max_results=5,
         exclude_websites=False
     )
-    print(json.dumps(search_result, indent=2))
+    print(search_result)
+    # print(json.dumps(search_result, indent=2))
