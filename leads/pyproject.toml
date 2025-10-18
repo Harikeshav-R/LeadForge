@@ -1,0 +1,7 @@
+[project]
+name = "leads"
+version = "0.1.0"
+description = "Agent to generate leads"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
