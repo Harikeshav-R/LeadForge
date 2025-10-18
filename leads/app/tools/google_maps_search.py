@@ -473,7 +473,7 @@ def google_maps_search(
         city: str,
         business_type: Optional[str] = None,
         min_rating: float = 0.0,
-        max_results: int = 100,
+        max_results: int = 10,
         exclude_websites: bool = False
 ) -> GoogleMapsSearchOutput:
     """
