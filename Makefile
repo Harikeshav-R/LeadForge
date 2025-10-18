@@ -31,8 +31,8 @@ prune: dev-down prod-down ## Clean up the system by removing all stopped contain
 dev: dev-up ## Start the development environment with hot-reloading (alias for 'dev-up').
 
 dev-up: ## Start the development environment with hot-reloading.
-	@echo "Starting development containers (with hot-reloading)..."
-	@docker-compose $(DEV_COMPOSE_FILE) up --build
+	@echo "Starting development containers in detached mode (with hot-reloading)..."
+	@docker-compose $(DEV_COMPOSE_FILE) up --build -d
 
 dev-build: ## Force a rebuild of all development images without starting containers.
 	@echo "Building development images..."
@@ -62,6 +62,10 @@ dev-logs-frontend: ## View and follow logs for the development frontend service 
 	@echo "Following frontend logs..."
 	@docker-compose $(DEV_COMPOSE_FILE) logs -f frontend
 
+dev-logs-leads: ## View and follow logs for the development leads service only.
+	@echo "Following leads logs..."
+	@docker-compose $(DEV_COMPOSE_FILE) logs -f leads
+
 dev-shell-backend: ## Open a bash shell inside the running development backend container.
 	@echo "Opening bash shell in backend container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec backend /bin/bash
@@ -69,6 +73,10 @@ dev-shell-backend: ## Open a bash shell inside the running development backend c
 dev-shell-frontend: ## Open a bash shell inside the running development frontend container.
 	@echo "Opening bash shell in frontend container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec frontend /bin/bash
+
+dev-shell-leads: ## Open a bash shell inside the running development leads container.
+	@echo "Opening bash shell in frontend container..."
+	@docker-compose $(DEV_COMPOSE_FILE) exec leads /bin/bash
 
 dev-shell-db: ## Open a psql shell to interact with the development PostgreSQL database.
 	@echo "Opening psql shell in db container..."
@@ -111,6 +119,10 @@ prod-logs-frontend: ## View and follow logs for the production frontend service 
 	@echo "Following production frontend logs..."
 	@docker-compose $(PROD_COMPOSE_FILE) logs -f frontend
 
+prod-logs-leads: ## View and follow logs for the production leads service only.
+	@echo "Following production leads logs..."
+	@docker-compose $(PROD_COMPOSE_FILE) logs -f leads
+
 prod-shell-backend: ## Open a bash shell inside the running production backend container.
 	@echo "Opening bash shell in production backend container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec backend /bin/bash
@@ -118,6 +130,10 @@ prod-shell-backend: ## Open a bash shell inside the running production backend c
 prod-shell-frontend: ## Open a bash shell inside the running production frontend container.
 	@echo "Opening bash shell in production frontend container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec frontend /bin/bash
+
+prod-shell-leads: ## Open a bash shell inside the running production leads container.
+	@echo "Opening bash shell in production leads container..."
+	@docker-compose $(PROD_COMPOSE_FILE) exec leads /bin/bash
 
 prod-shell-db: ## Open a psql shell to interact with the production PostgreSQL database.
 	@echo "Opening psql shell in production db container..."
