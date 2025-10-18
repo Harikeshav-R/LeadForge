@@ -48,7 +48,7 @@ dev-stop: ## Stop running development containers without removing them.
 
 dev-restart: ## Restart all development services.
 	@echo "Restarting development containers..."
-	@make stop && make up
+	@make dev-stop && make dev-up
 
 dev-logs: ## View and follow logs for all running development services.
 	@echo "Following logs for all development services..."
@@ -97,7 +97,7 @@ prod-stop: ## Stop running production containers without removing them.
 
 prod-restart: ## Restart all production services.
 	@echo "Restarting production containers..."
-	@make stop && make up
+	@make prod-stop && make prod-up
 
 prod-logs: ## View and follow logs for all running production services.
 	@echo "Following logs for all production services..."
