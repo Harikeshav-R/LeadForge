@@ -1,6 +1,7 @@
 import base64
 
 from langchain.tools import tool
+from loguru import logger
 from playwright.sync_api import sync_playwright, Error as PlaywrightError
 
 from app.schemas.visual_analysis import VisualAnalysisOutput, CapturedScreenshot, VisualAnalysisInput
@@ -29,14 +30,15 @@ class WebsiteScreenshotter:
             url (str): The URL of the website to be captured.
 
         Returns:
-            VisualAnalysisOutput: A list of dictionaries containing screenshot data.
+            VisualAnalysisOutput: An object containing a list of screenshot data.
 
         Raises:
             ValueError: If the provided URL is empty or None.
-            ScreenshotCaptureError: If screenshots cannot be captured.
+            ScreenshotCapture-CaptureError: If screenshots cannot be captured.
         """
+        logger.info(f"Starting screenshot capture workflow for URL: {url}")
         if not url:
-            # Raise a specific error for invalid input
+            logger.error("Validation failed: URL is empty or None.")
             raise ValueError("Error: A valid URL must be provided.")
 
         # This method will raise an exception on failure
@@ -54,9 +56,7 @@ class WebsiteScreenshotter:
             url (str): The URL of the website to capture.
 
         Returns:
-            VisualAnalysisOutput: A list of dictionaries, where each dictionary
-                                  contains the device type ('desktop', 'tablet',
-                                  'mobile') and the base64-encoded JPEG image.
+            VisualAnalysisOutput: An object containing the list of captured screenshots.
 
         Raises:
             ScreenshotCaptureError: If Playwright fails to initialize the browser or
@@ -71,17 +71,19 @@ class WebsiteScreenshotter:
 
         try:
             with sync_playwright() as p:
-                # Launch a headless Chromium browser. Playwright handles the binary installation.
+                logger.info("Initializing Playwright and launching headless Chromium browser...")
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page(
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
                 )
+                logger.info("Browser launched successfully.")
 
                 for device, dims in resolutions.items():
+                    logger.info(f"Capturing for {device} view ({dims['width']}x{dims['height']})...")
                     page.set_viewport_size(dims)
-                    # Use 'domcontentloaded' for faster navigation, as we don't need all assets.
+                    logger.debug(f"Navigating to {url}...")
                     page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                    # Capture only the viewport, not the full page
+
                     png_screenshot = page.screenshot(full_page=False, type="png")
                     base64_image = f"data:image/png;base64,{base64.b64encode(png_screenshot).decode('utf-8')}"
 
@@ -89,18 +91,21 @@ class WebsiteScreenshotter:
                         device=device,
                         image=base64_image
                     ))
+                    logger.info(f"Successfully captured screenshot for {device}.")
 
+                logger.info("Closing browser...")
                 browser.close()
 
         except PlaywrightError as e:
-            error_message = f"An error occurred during screenshot capture with Playwright: {e}"
-            print(error_message)
+            error_message = f"A Playwright error occurred during screenshot capture: {e}"
+            logger.error(error_message, exc_info=True)
             raise ScreenshotCaptureError(error_message) from e
         except Exception as e:
             error_message = f"An unexpected error occurred during screenshot capture: {e}"
-            print(error_message)
+            logger.error(error_message, exc_info=True)
             raise ScreenshotCaptureError(error_message) from e
 
+        logger.info(f"Completed screenshot capture. Total screenshots: {len(screenshots)}.")
         return VisualAnalysisOutput(screenshots)
 
 
@@ -113,27 +118,31 @@ def website_screenshotter(url: str) -> VisualAnalysisOutput | str:
     Use this tool when you need to get visual data from a webpage.
     The output of this tool is data, not a human-readable analysis.
     """
+    logger.info(f"Executing website_screenshotter tool for URL: {url}")
     try:
         screenshotter = WebsiteScreenshotter()
-        return screenshotter.run(url)
+        result = screenshotter.run(url)
+        logger.info("Tool execution completed successfully.")
+        return result
     except (ValueError, ScreenshotCaptureError) as e:
-        # Return the error message as a string for the agent to process.
+        logger.warning(f"Tool execution failed with a known error: {e}")
         return f"Tool Error: {e}"
     except Exception as e:
+        logger.error(f"Tool execution failed with an unexpected error: {e}", exc_info=True)
         return f"An unexpected tool error occurred: {e}"
 
 
 # --- Example Usage ---
 if __name__ == '__main__':
-    print("--- Running Website Screenshotter Tool ---")
+    logger.info("--- Running Website Screenshotter Tool ---")
     test_url = "https://www.google.com"
-    print(f"Capturing URL: {test_url}")
+    logger.info(f"Capturing URL: {test_url}")
     data = website_screenshotter.run(test_url)
 
     if isinstance(data, VisualAnalysisOutput):
-        print(f"\n--- Successfully captured screenshots ---")
+        logger.success(f"\n--- Successfully captured screenshots ---")
         for item in data.root:
-            print(f"Device: {item.device}, Image (first 50 chars): {item.image[:50]}...")
+            logger.success(f"Device: {item.device}, Image (first 50 chars): {item.image[:50]}...")
     else:
-        print(f"\n--- Tool returned an error ---")
-        print(data)
+        logger.error(f"\n--- Tool returned an error ---")
+        logger.error(data)

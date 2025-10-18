@@ -542,7 +542,7 @@ def google_maps_high_rated_search(city: str, min_rating: float = 4.0) -> GoogleM
 
 # --- Example Usage ---
 if __name__ == '__main__':
-    print("--- Searching for restaurants in New York with no websites ---")
+    logger.info("--- Searching for restaurants in New York with no websites ---")
     search_result = _google_maps_search(
         city="New York",
         business_type="restaurant",
@@ -550,5 +550,5 @@ if __name__ == '__main__':
         max_results=5,
         exclude_websites=False
     )
-    print(search_result)
+    logger.success(search_result)
     # print(json.dumps(search_result, indent=2))
