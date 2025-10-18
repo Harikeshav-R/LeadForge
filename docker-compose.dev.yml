@@ -24,9 +24,24 @@ services:
     volumes:
       - ./backend:/backend # Mount local 'backend' folder into the container
       - /backend/.venv # Don't mount local .venv, use the one in the container
-
     ports:
       - "8000:8000"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  leads:
+    container_name: leads_dev
+    build:
+      context: ./leads
+      target: dev # Use the 'dev' stage from the leads Dockerfile
+    volumes:
+      - ./leads:/leads # Mount local 'leads' folder into the container
+      - /leads/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8001:8001"
     env_file:
       - .env.dev
     depends_on:

@@ -26,6 +26,19 @@ services:
       db:
         condition: service_healthy
 
+  leads:
+    container_name: leads_prod
+    build:
+      context: ./leads
+      target: prod # Use the 'prod' stage from the leads Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     container_name: frontend_prod
     build:
