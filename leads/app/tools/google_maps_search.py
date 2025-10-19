@@ -380,6 +380,7 @@ def get_maps_client() -> GoogleMapsClient:
 def _google_maps_search(
         city: str,
         business_type: Optional[str] = None,
+        radius: int = 50000,
         min_rating: float = 0.0,
         max_results: int = 100,
         exclude_websites: bool = True
@@ -404,6 +405,7 @@ def _google_maps_search(
     response_metadata = {
         "city": city,
         "business_type": business_type,
+        "radius": radius,
         "min_rating": min_rating,
         "max_results": max_results,
         "exclude_websites": exclude_websites,
@@ -414,6 +416,7 @@ def _google_maps_search(
         businesses = maps_client.search_businesses(
             city=city,
             business_type=business_type,
+            radius=radius,
             min_rating=min_rating,
             max_results=max_results,
             exclude_websites=exclude_websites
@@ -472,6 +475,7 @@ def _google_maps_search(
 def google_maps_search(
         city: str,
         business_type: Optional[str] = None,
+        radius: int = 50000,
         min_rating: float = 0.0,
         max_results: int = 10,
         exclude_websites: bool = False
