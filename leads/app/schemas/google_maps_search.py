@@ -31,6 +31,7 @@ class PlaceResult(BaseModel):
 class SearchMetadata(BaseModel):
     city: str = Field(..., description="City name searched for.")
     business_type: str | None = Field(..., description="Business type searched for.")
+    radius: int = Field(..., description="Radius in meters used for search.")
     min_rating: float = Field(..., description="Minimum rating required for results.")
     max_results: int = Field(..., description="Maximum number of results returned.")
     exclude_websites: bool = Field(..., description="Whether websites were excluded from results.")

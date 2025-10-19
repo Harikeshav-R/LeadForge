@@ -1,8 +1,8 @@
-from pydantic import BaseModel, Field, HttpUrl, RootModel
+from pydantic import BaseModel, Field, RootModel
 
 
 class VisualAnalysisInput(BaseModel):
-    url: HttpUrl = Field(..., description="URL of the website to analyze.")
+    url: str = Field(..., description="URL of the website to analyze.")
 
 
 class CapturedScreenshot(BaseModel):
