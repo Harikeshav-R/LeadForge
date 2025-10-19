@@ -18,6 +18,9 @@ VISUAL_ANALYSIS_SYSTEM_PROMPT = \
     4.  **Suggestions for Improvement:** Provide a bulleted list of 3 actionable recommendations.
     
     Your final output should be a detailed, well-structured markdown report.
+    Be as critical as you can be about your analysis. Find any and all flaws and errors possible.
+    Do not reference the prompt, or mention any affirmations to the prompt, or any other irrelevant information.
+    Just output the analysis.
     """
 
 
@@ -74,34 +77,6 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
 
 
 def analyze_lead(lead: Lead) -> Lead:
-    # with ThreadPoolExecutor() as executor:
-    #     contacts_scraper_future = executor.submit(
-    #         get_contact_info,
-    #         lead=lead
-    #     )
-    #
-    #     visual_analysis_future = executor.submit(
-    #         get_visual_analysis,
-    #         lead=lead
-    #     )
-    #
-    #     contact_info: ContactScraperOutput = contacts_scraper_future.result()
-    #     visual_analysis_result: tuple[VisualAnalysisOutput, str] = visual_analysis_future.result()
-    #     visual_analysis_output, website_review = visual_analysis_result
-    #
-    # analyzed_lead = lead.model_copy(
-    #     update={
-    #         "emails": contact_info.emails,
-    #         "phone_numbers": contact_info.phone_numbers,
-    #         "social_media": contact_info.social_media,
-    #
-    #         "screenshots": visual_analysis_output.root,
-    #         "website_review": website_review
-    #     }
-    # )
-    #
-    # return analyzed_lead
-
     parallel_runner = RunnableParallel(
         contacts_scraper=get_contact_info,
         visual_analysis=get_visual_analysis
