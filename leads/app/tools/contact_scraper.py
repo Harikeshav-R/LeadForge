@@ -19,6 +19,11 @@ class ScrapingError(Exception):
     pass
 
 
+class GlobalTimeoutLimitReached(Exception):
+    """Custom exception for when the global timeout limit is exceeded."""
+    pass
+
+
 class ContactScraper:
     """
     A class to scrape contact information (emails, phone numbers, social media links)
@@ -63,6 +68,8 @@ class ContactScraper:
             "phone_numbers": set(),
             "social_media": set()
         }
+        self.timeout_count = 0
+        self.max_timeouts = 5
 
     def _fetch_html(self, url: str) -> str | None:
         """
@@ -84,6 +91,12 @@ class ContactScraper:
                 logger.debug(f"Skipping non-HTML content at {url}")
                 return None
             return response.text
+        except requests.exceptions.Timeout as e:
+            self.timeout_count += 1
+            logger.warning(f"Timeout fetching {url}. Total timeouts: {self.timeout_count}/{self.max_timeouts}")
+            if self.timeout_count >= self.max_timeouts:
+                raise GlobalTimeoutLimitReached(f"Global timeout limit of {self.max_timeouts} reached.") from e
+            return None
         except requests.exceptions.RequestException as e:
             logger.error(f"Could not fetch URL {url}: {e}")
             if url == self.start_url:
@@ -235,9 +248,10 @@ class ContactScraper:
         logger.info(f"Starting scrape for {self.start_url}")
         try:
             self._crawl(self.start_url)
+        except GlobalTimeoutLimitReached as e:
+            logger.critical(f"{e} Aborting crawl. Returning what has been found so far.")
         except (WebsiteUnreachableError, ScrapingError) as e:
             logger.critical(f"A critical error occurred: {e}")
-            return ContactScraperOutput()  # Return empty dict on critical failure
 
         logger.success("Scraping finished.")
         # Convert sets to lists for easier use (e.g., JSON serialization)
