@@ -18,6 +18,9 @@ VISUAL_ANALYSIS_SYSTEM_PROMPT = \
     4.  **Suggestions for Improvement:** Provide a bulleted list of 3 actionable recommendations.
     
     Your final output should be a detailed, well-structured markdown report.
+    Be as critical as you can be about your analysis. Find any and all flaws and errors possible.
+    Do not reference the prompt, or mention any affirmations to the prompt, or any other irrelevant information.
+    Just output the analysis.
     """
 
 
