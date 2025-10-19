@@ -20,11 +20,11 @@ class PlaceResult(BaseModel):
     address: str = Field(..., description="Address of the business.")
     phone_number: str | None = Field(None, description="Phone number of the business.")
     website: str | None = Field(None, description="Website of the business.")
-    rating: float = Field(..., description="Rating of the business.")
-    total_ratings: int = Field(..., description="Total number of ratings.")
-    category: str = Field(..., description="Category of the business.")
-    price_level: int = Field(..., description="Price level of the business.")
-    is_open: bool = Field(..., description="Whether the business is open.")
+    rating: float | None = Field(None, description="Rating of the business.")
+    total_ratings: int | None = Field(None, description="Total number of ratings.")
+    category: str | None = Field(None, description="Category of the business.")
+    price_level: int | None = Field(None, description="Price level of the business.")
+    is_open: bool | None = Field(None, description="Whether the business is open.")
     location: Location = Field(..., description="Location coordinates of the business.")
 
 
