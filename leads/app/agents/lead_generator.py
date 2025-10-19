@@ -8,7 +8,10 @@ def generate_leads_node(state: State) -> State:
     google_maps_search_result: GoogleMapsSearchOutput = google_maps_search.invoke(
         GoogleMapsSearchInput(
             city=state.city,
-            business_type=state.business_type
+            business_type=state.business_type,
+            radius=state.radius,
+            min_rating=state.min_rating,
+            max_results=state.max_results,
         ).model_dump()
     )
 
