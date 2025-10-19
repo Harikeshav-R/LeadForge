@@ -1,11 +1,11 @@
-from concurrent.futures import ThreadPoolExecutor
-
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableParallel, RunnableLambda
 
 from app.core.config import Config
 from app.schemas import ContactScraperInput, ContactScraperOutput, VisualAnalysisInput, VisualAnalysisOutput
 from app.schemas.lead import Lead
+from app.schemas.state import State
 from app.tools import contact_scraper, visual_analysis
 
 VISUAL_ANALYSIS_SYSTEM_PROMPT = \
@@ -25,7 +25,7 @@ def get_contact_info(lead: Lead) -> ContactScraperOutput:
     return contact_scraper.invoke(
         ContactScraperInput(
             url=lead.website
-        )
+        ).model_dump()
     )
 
 
@@ -33,7 +33,7 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
     visual_analysis_result: VisualAnalysisOutput = visual_analysis.invoke(
         VisualAnalysisInput(
             url=lead.website
-        )
+        ).model_dump()
     )
 
     gemini_client = init_chat_model(
@@ -70,31 +70,62 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
     return visual_analysis_result, response.text
 
 
-def analyze_lead_node(lead: Lead) -> Lead:
-    with ThreadPoolExecutor() as executor:
-        contacts_scraper_future = executor.submit(
-            get_contact_info,
-            lead=lead
-        )
+def analyze_lead(lead: Lead) -> Lead:
+    # with ThreadPoolExecutor() as executor:
+    #     contacts_scraper_future = executor.submit(
+    #         get_contact_info,
+    #         lead=lead
+    #     )
+    #
+    #     visual_analysis_future = executor.submit(
+    #         get_visual_analysis,
+    #         lead=lead
+    #     )
+    #
+    #     contact_info: ContactScraperOutput = contacts_scraper_future.result()
+    #     visual_analysis_result: tuple[VisualAnalysisOutput, str] = visual_analysis_future.result()
+    #     visual_analysis_output, website_review = visual_analysis_result
+    #
+    # analyzed_lead = lead.model_copy(
+    #     update={
+    #         "emails": contact_info.emails,
+    #         "phone_numbers": contact_info.phone_numbers,
+    #         "social_media": contact_info.social_media,
+    #
+    #         "screenshots": visual_analysis_output.root,
+    #         "website_review": website_review
+    #     }
+    # )
+    #
+    # return analyzed_lead
 
-        visual_analysis_future = executor.submit(
-            get_visual_analysis,
-            lead=lead
-        )
+    parallel_runner = RunnableParallel(
+        contacts_scraper=get_contact_info,
+        visual_analysis=get_visual_analysis
+    )
 
-        contact_info: ContactScraperOutput = contacts_scraper_future.result()
-        visual_analysis_result: tuple[VisualAnalysisOutput, str] = visual_analysis_future.result()
-        visual_analysis_output, website_review = visual_analysis_result
+    result = parallel_runner.invoke(lead)
 
     analyzed_lead = lead.model_copy(
         update={
-            "emails": contact_info.emails,
-            "phone_numbers": contact_info.phone_numbers,
-            "social_media": contact_info.social_media,
+            "emails": result.get("contacts_scraper").emails,
+            "phone_numbers": result.get("contacts_scraper").phone_numbers,
+            "social_media": result.get("contacts_scraper").social_media,
 
-            "screenshots": visual_analysis_output.root,
-            "website_review": website_review
+            "screenshots": result.get("visual_analysis")[0].root,
+            "website_review": result.get("visual_analysis")[1]
         }
     )
 
     return analyzed_lead
+
+
+def analyze_leads_node(state: State) -> State:
+    runnable = RunnableLambda(analyze_lead)
+    batch_results = runnable.batch(state.leads)
+
+    return state.model_copy(
+        update={
+            "leads": batch_results
+        }
+    )
