@@ -30,11 +30,14 @@ def get_contact_info(lead: Lead) -> ContactScraperOutput:
 
 
 def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
-    visual_analysis_result: VisualAnalysisOutput = visual_analysis.invoke(
+    visual_analysis_result: VisualAnalysisOutput | str = visual_analysis.invoke(
         VisualAnalysisInput(
             url=lead.website
         ).model_dump()
     )
+
+    if isinstance(visual_analysis_result, str):
+        return VisualAnalysisOutput([]), ""
 
     gemini_client = init_chat_model(
         "gemini-2.5-flash",
