@@ -19,4 +19,4 @@ if __name__ == "__main__":
 
     final_state = State(**app.invoke(initial_state))
 
-    print(final_state.model_dump_json(indent=2))
+    print(final_state.model_dump_json(indent=2, exclude={"leads": {"__all__": {"screenshots"}}}))
