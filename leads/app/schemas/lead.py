@@ -8,8 +8,8 @@ class Lead(BaseModel):
     place_id: str = Field(..., description="ID of the place on google maps.")
     name: str = Field(..., description="Name of the business.")
     address: str = Field(..., description="Address of the business.")
-    phone_number: str = Field(..., description="Phone number of the business.")
-    website: str = Field(..., description="Website of the business.")
+    phone_number: str | None = Field(None, description="Phone number of the business.")
+    website: str | None = Field(None, description="Website of the business.")
     rating: float = Field(..., description="Rating of the business.")
     total_ratings: int = Field(..., description="Total number of ratings.")
     category: str = Field(..., description="Category of the business.")
@@ -20,7 +20,7 @@ class Lead(BaseModel):
     emails: list[str] = Field(default_factory=list, description="A list of unique email addresses scraped.")
     phone_numbers: list[str] = Field(default_factory=list, description="A list of unique phone numbers scraped.")
     social_media: list[str] = Field(default_factory=list,
-                                        description="A list of unique social media profile links scraped.")
+                                    description="A list of unique social media profile links scraped.")
 
     screenshots: list[CapturedScreenshot] = Field(default_factory=list,
                                                   description="List of base64 encoded captured screenshots for different devices.")
