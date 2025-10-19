@@ -25,6 +25,20 @@ class ContactScraper:
     from a given website.
     """
 
+    # A tuple of common file extensions to ignore during crawling
+    IGNORED_EXTENSIONS = (
+        # Images
+        '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.bmp', '.ico',
+        # Documents
+        '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv',
+        # Archives
+        '.zip', '.rar', '.tar', '.gz',
+        # Audio/Video
+        '.mp3', '.mp4', '.avi', '.mov',
+        # Other
+        '.css', '.js', '.xml', '.json'
+    )
+
     def __init__(self, url: str) -> None:
         """
         Initializes the ContactScraper with a starting URL.
@@ -66,6 +80,9 @@ class ContactScraper:
         try:
             response = self.session.get(url, timeout=10)
             response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+            if 'text/html' not in response.headers.get('Content-Type', ''):
+                logger.debug(f"Skipping non-HTML content at {url}")
+                return None
             return response.text
         except requests.exceptions.RequestException as e:
             logger.error(f"Could not fetch URL {url}: {e}")
@@ -91,6 +108,13 @@ class ContactScraper:
         # 2. Find in 'mailto:' links
         for a_tag in soup.find_all('a', href=True):
             href = a_tag['href']
+
+            # Filter out irrelevant links before processing
+            path = urlparse(href).path.lower()
+
+            if any(path.endswith(ext) for ext in self.IGNORED_EXTENSIONS):
+                continue
+
             if href.startswith('mailto:'):
                 # Extract email from href, remove 'mailto:' and potential query params
                 email = href.replace('mailto:', '', 1).split('?')[0]
@@ -118,6 +142,13 @@ class ContactScraper:
         # 2. Find in 'tel:' links
         for a_tag in soup.find_all('a', href=True):
             href = a_tag['href']
+
+            # Filter out irrelevant links before processing
+            path = urlparse(href).path.lower()
+
+            if any(path.endswith(ext) for ext in self.IGNORED_EXTENSIONS):
+                continue
+
             if href.startswith('tel:'):
                 phone_number = href.replace('tel:', '', 1).strip()
                 self.contacts["phone_numbers"].add(phone_number)
@@ -135,6 +166,13 @@ class ContactScraper:
         ]
         for a_tag in soup.find_all('a', href=True):
             href = a_tag['href']
+
+            # Filter out irrelevant links before processing
+            path = urlparse(href).path.lower()
+
+            if any(path.endswith(ext) for ext in self.IGNORED_EXTENSIONS):
+                continue
+
             if any(pattern in href for pattern in social_media_patterns):
                 self.contacts["social_media"].add(href)
 
@@ -166,6 +204,13 @@ class ContactScraper:
 
             for a_tag in soup.find_all('a', href=True):
                 link = a_tag['href']
+
+                # Filter out irrelevant links before processing
+                path = urlparse(link).path.lower()
+
+                if any(path.endswith(ext) for ext in self.IGNORED_EXTENSIONS):
+                    continue
+
                 absolute_link = urljoin(url, link)
                 parsed_link = urlparse(absolute_link)
                 # Reconstruct link without fragments
