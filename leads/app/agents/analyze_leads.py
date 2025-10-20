@@ -170,7 +170,7 @@ def analyze_lead(lead: Lead) -> Lead:
 
     except Exception:
         logger.exception("Failed to analyze lead '%s'. Returning original lead.", lead.name)
-        return lead
+        return lead.model_copy()
 
 
 # --- Main Node Function ---
@@ -191,7 +191,7 @@ def analyze_leads_node(state: State) -> State:
     """
     if not state.leads:
         logger.warning("No leads to analyze. Skipping analysis node.")
-        return state
+        return state.model_copy()
 
     logger.info("Starting analysis for a batch of %d leads.", len(state.leads))
     try:
@@ -208,4 +208,4 @@ def analyze_leads_node(state: State) -> State:
     except Exception:
         logger.exception("A critical error occurred during the batch lead analysis.")
         # Return the original state to prevent data loss.
-        return state
+        return state.model_copy()
