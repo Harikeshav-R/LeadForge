@@ -48,20 +48,20 @@ def get_contact_info(lead: Lead) -> ContactScraperOutput:
         Returns an empty object if scraping fails or the URL is invalid.
     """
     if not lead.website:
-        logger.warning("Lead '%s' has no website URL. Skipping contact scraping.", lead.name)
+        logger.warning(f"Lead {lead.name} has no website URL. Skipping contact scraping.")
         return ContactScraperOutput(emails=[], phone_numbers=[], social_media=[])
 
-    logger.info("Scraping contact info for %s from %s", lead.name, lead.website)
+    logger.info(f"Scraping contact info for {lead.name} from {lead.website}")
     try:
         # Prepare and invoke the contact scraper tool.
         scraper_input = ContactScraperInput(url=lead.website).model_dump()
         result = contact_scraper.invoke(scraper_input)
-        logger.debug("Successfully scraped contact info for %s.", lead.name)
+        logger.debug(f"Successfully scraped contact info for {lead.name}.")
         return result
     except Exception:
         # Log any exception during the scraping process and return a default
         # empty object to prevent downstream errors.
-        logger.exception("Failed to scrape contact info for %s.", lead.name)
+        logger.exception(f"Failed to scrape contact info for {lead.name}.")
         return ContactScraperOutput(emails=[], phone_numbers=[], social_media=[])
 
 
@@ -83,10 +83,11 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
         Returns empty objects `(VisualAnalysisOutput([]), "")` if analysis fails.
     """
     if not lead.website:
-        logger.warning("Lead '%s' has no website URL. Skipping visual analysis.", lead.name)
+        logger.warning(f"Lead '{lead.name}' has no website URL. Skipping visual analysis.")
         return VisualAnalysisOutput(root=[]), ""
 
-    logger.info("Performing visual analysis for %s at %s", lead.name, lead.website)
+    logger.info(f"Performing visual analysis for {lead.name} at {lead.name}")
+
     try:
         # Step 1: Capture screenshots of the website.
         analysis_input = VisualAnalysisInput(url=lead.website).model_dump()
@@ -94,7 +95,7 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
 
         # Handle cases where the tool returns an error string instead of data.
         if isinstance(visual_analysis_result, str) or not visual_analysis_result.root:
-            logger.error("Visual analysis tool failed for %s. Reason: %s", lead.name, visual_analysis_result)
+            logger.error(f"Visual analysis tool failed for {lead.name}. Reason: {visual_analysis_result}")
             return VisualAnalysisOutput(root=[]), ""
 
         # Step 2: Initialize the Gemini client for the review.
@@ -118,12 +119,12 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
 
         # Step 4: Invoke the Gemini model to get the UI/UX review.
         response = gemini_client.invoke(messages)
-        logger.info("Successfully generated website review for %s.", lead.name)
+        logger.info(f"Successfully generated website review for {lead.name}")
         return visual_analysis_result, response.text
 
     except Exception:
         # Log any exceptions during the process and return empty results.
-        logger.exception("An error occurred during visual analysis for %s.", lead.name)
+        logger.exception(f"An error occurred during visual analysis for {lead.name}.")
         return VisualAnalysisOutput(root=[]), ""
 
 
@@ -137,7 +138,7 @@ def analyze_lead(lead: Lead) -> Lead:
     Returns:
         An updated lead object with the analysis results populated.
     """
-    logger.info("Starting parallel analysis for lead: %s", lead.name)
+    logger.info(f"Starting parallel analysis for lead: {lead.name}")
     try:
         # Define the parallel tasks for scraping contacts and performing visual analysis.
         parallel_runner = RunnableParallel(
@@ -165,11 +166,11 @@ def analyze_lead(lead: Lead) -> Lead:
                 "website_review": visual_data[1]
             }
         )
-        logger.info("Successfully analyzed lead: %s", lead.name)
+        logger.info(f"Successfully analyzed lead: {lead.name}")
         return analyzed_lead
 
     except Exception:
-        logger.exception("Failed to analyze lead '%s'. Returning original lead.", lead.name)
+        logger.exception(f"Failed to analyze lead '{lead.name}'. Returning original lead.")
         return lead.model_copy()
 
 

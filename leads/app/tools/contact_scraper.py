@@ -44,7 +44,7 @@ class ContactScraper:
         '.css', '.js', '.xml', '.json'
     )
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, max_links: int) -> None:
         """
         Initializes the ContactScraper with a starting URL.
 
@@ -56,6 +56,8 @@ class ContactScraper:
             logger.info(f"No scheme provided. Assuming HTTPS. Using: {url}")
 
         self.start_url = url
+        self.max_links = max_links
+
         parsed_url = urlparse(self.start_url)
         self.domain = parsed_url.netloc
         self.session = requests.Session()
@@ -199,7 +201,7 @@ class ContactScraper:
         if url in self.visited_urls or urlparse(url).netloc != self.domain:
             return
 
-        if len(self.visited_urls) > 50:
+        if len(self.visited_urls) > self.max_links:
             return
 
         logger.info(f"Scraping: {url}")
@@ -268,7 +270,7 @@ class ContactScraper:
 
 
 @tool(args_schema=ContactScraperInput)
-def contact_scraper(url: str) -> ContactScraperOutput:
+def contact_scraper(url: str, max_links: int) -> ContactScraperOutput:
     """Scrapes a website to find and extract contact information.
 
     This tool crawls an entire website starting from the provided URL. It searches
@@ -283,7 +285,7 @@ def contact_scraper(url: str) -> ContactScraperOutput:
         ContactInfo: An object containing lists of found emails,
                      phone numbers, and social media links.
     """
-    scraper = ContactScraper(url)
+    scraper = ContactScraper(url, max_links)
     contact_info = scraper.run()
     return contact_info
 

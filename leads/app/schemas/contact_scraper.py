@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 class ContactScraperInput(BaseModel):
     url: str = Field(..., description="The base URL or domain name of the website to scrape.")
+    max_links: int = Field(10, description="Maximum links of the website to scrape.")
 
 
 class ContactScraperOutput(BaseModel):

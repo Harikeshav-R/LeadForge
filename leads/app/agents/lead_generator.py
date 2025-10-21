@@ -26,9 +26,7 @@ def generate_leads_node(state: State) -> State:
         with an error message if the state schema supports it.
     """
     logger.info(
-        "Starting lead generation for business type '%s' in %s.",
-        state.business_type,
-        state.city
+        f"Starting lead generation for business type '{state.business_type}' in {state.city}."
     )
 
     try:
@@ -53,7 +51,7 @@ def generate_leads_node(state: State) -> State:
     except Exception as e:
         # Catch any unexpected exceptions during the API call.
         logger.exception(
-            "An unexpected error occurred while calling the google_maps_search tool: %s", e
+            f"An unexpected error occurred while calling the google_maps_search tool: {e}"
         )
         # Return the original state without modification, preventing a crash.
         return state.model_copy()
@@ -98,9 +96,7 @@ def generate_leads_node(state: State) -> State:
         except (TypeError, AttributeError, KeyError) as e:
             # Catch potential errors during the creation of Lead objects,
             # which could happen if the API response format is unexpected.
-            logger.exception(
-                "Error processing search results into Lead objects: %s", e
-            )
+            logger.exception(f"Error processing search results into Lead objects: {e}")
             # Return original state to avoid propagating corrupted data.
             return state.model_copy()
 
@@ -112,7 +108,7 @@ def generate_leads_node(state: State) -> State:
             else "Unknown error from the search tool."
         )
         logger.error(
-            "Google Maps search tool returned a failure status: %s", error_message
+            f"Google Maps search tool returned a failure status: {error_message}"
         )
         # Return the original state. In a real-world scenario, you might want
         # to add the error message to the state if the schema allows it.
