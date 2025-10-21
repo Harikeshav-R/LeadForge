@@ -36,7 +36,7 @@ def create_workflow(db: Session, workflow: schemas.WorkflowCreate) -> models.Wor
         raise
 
 
-def get_workflow(db: Session, workflow_db_id: uuid.UUID) -> models.Workflow | None:
+def read_workflow(db: Session, workflow_db_id: uuid.UUID) -> models.Workflow | None:
     """Retrieves a single workflow from the database by its UUID.
 
     Args:
@@ -50,7 +50,7 @@ def get_workflow(db: Session, workflow_db_id: uuid.UUID) -> models.Workflow | No
     return db.query(models.Workflow).filter(models.Workflow.id == workflow_db_id).first()
 
 
-def get_workflows(db: Session, skip: int = 0, limit: int = 100) -> list[models.Workflow]:
+def read_all_workflows(db: Session, skip: int = 0, limit: int = 100) -> list[models.Workflow]:
     """Retrieves a list of workflows from the database with pagination.
 
     Args:
@@ -79,7 +79,7 @@ def update_workflow(db: Session, workflow_db_id: uuid.UUID,
     """
     logger.info(f"Attempting to update workflow with ID: {workflow_db_id}")
     # Find the workflow that needs to be updated.
-    db_workflow = get_workflow(db, workflow_db_id)
+    db_workflow = read_workflow(db, workflow_db_id)
 
     if not db_workflow:
         logger.warning(f"Workflow with ID {workflow_db_id} not found for update.")
@@ -117,7 +117,7 @@ def delete_workflow(db: Session, workflow_db_id: uuid.UUID) -> models.Workflow |
     """
     logger.info(f"Attempting to delete workflow with ID: {workflow_db_id}")
     # Retrieve the workflow object to delete.
-    db_workflow = get_workflow(db, workflow_db_id)
+    db_workflow = read_workflow(db, workflow_db_id)
 
     if db_workflow:
         try:

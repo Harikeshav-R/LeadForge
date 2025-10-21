@@ -55,7 +55,7 @@ def create_lead(db: Session, lead: schemas.LeadCreate) -> models.Lead:
         raise
 
 
-def get_lead(db: Session, lead_id: uuid.UUID) -> models.Lead | None:
+def read_lead(db: Session, lead_id: uuid.UUID) -> models.Lead | None:
     """Retrieves a single lead from the database by its UUID.
 
     Args:
@@ -69,7 +69,7 @@ def get_lead(db: Session, lead_id: uuid.UUID) -> models.Lead | None:
     return db.query(models.Lead).filter(models.Lead.id == lead_id).first()
 
 
-def get_lead_by_place_id(db: Session, place_id: str) -> models.Lead | None:
+def read_lead_by_place_id(db: Session, place_id: str) -> models.Lead | None:
     """Retrieves a single lead from the database by its Google Place ID.
 
     Args:
@@ -83,7 +83,7 @@ def get_lead_by_place_id(db: Session, place_id: str) -> models.Lead | None:
     return db.query(models.Lead).filter(models.Lead.place_id == place_id).first()
 
 
-def get_leads_by_place_id(db: Session, place_id: str) -> list[models.Lead] | None:
+def read_all_leads_by_place_id(db: Session, place_id: str) -> list[models.Lead] | None:
     """Retrieves a single lead from the database by its Google Place ID.
 
     Args:
@@ -97,7 +97,7 @@ def get_leads_by_place_id(db: Session, place_id: str) -> list[models.Lead] | Non
     return db.query(models.Lead).filter(models.Lead.place_id == place_id).all()
 
 
-def get_leads(db: Session, skip: int = 0, limit: int = 100) -> list[models.Lead]:
+def read_all_leads(db: Session, skip: int = 0, limit: int = 100) -> list[models.Lead]:
     """Retrieves a list of leads from the database with pagination.
 
     Args:
@@ -125,7 +125,7 @@ def update_lead(db: Session, lead_id: uuid.UUID, lead_update: schemas.LeadUpdate
     """
     logger.info(f"Attempting to update lead with ID: {lead_id}")
     # First, retrieve the existing lead from the database.
-    db_lead = get_lead(db, lead_id)
+    db_lead = read_lead(db, lead_id)
 
     if not db_lead:
         logger.warning(f"Lead with ID {lead_id} not found for update.")
@@ -166,7 +166,7 @@ def delete_lead(db: Session, lead_id: uuid.UUID) -> models.Lead | None:
     """
     logger.info("Attempting to delete lead with ID: %s", lead_id)
     # Retrieve the lead to be deleted.
-    db_lead = get_lead(db, lead_id)
+    db_lead = read_lead(db, lead_id)
 
     if db_lead:
         try:

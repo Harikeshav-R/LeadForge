@@ -36,7 +36,7 @@ def create_state(db: Session, state: schemas.StateCreate) -> models.State:
         raise
 
 
-def get_state(db: Session, state_id: uuid.UUID) -> models.State | None:
+def read_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     """Retrieves a single state from the database by its UUID.
 
     Args:
@@ -50,7 +50,7 @@ def get_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     return db.query(models.State).filter(models.State.id == state_id).first()
 
 
-def get_states(db: Session, skip: int = 0, limit: int = 100) -> list[models.State]:
+def read_all_states(db: Session, skip: int = 0, limit: int = 100) -> list[models.State]:
     """Retrieves a list of states from the database with pagination.
 
     Args:
@@ -78,7 +78,7 @@ def update_state(db: Session, state_id: uuid.UUID, state_update: schemas.StateUp
     """
     logger.info(f"Attempting to update state with ID: {state_id}")
     # Retrieve the existing state object.
-    db_state = get_state(db, state_id)
+    db_state = read_state(db, state_id)
 
     if not db_state:
         logger.warning(f"State with ID {state_id} not found for update.")
@@ -117,7 +117,7 @@ def delete_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     """
     logger.info(f"Attempting to delete state with ID: {state_id}")
     # Find the state to be deleted.
-    db_state = get_state(db, state_id)
+    db_state = read_state(db, state_id)
 
     if db_state:
         try:
