@@ -199,6 +199,9 @@ class ContactScraper:
         if url in self.visited_urls or urlparse(url).netloc != self.domain:
             return
 
+        if len(self.visited_urls) > 50:
+            return
+
         logger.info(f"Scraping: {url}")
         self.visited_urls.add(url)
 
