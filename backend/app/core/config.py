@@ -1,4 +1,11 @@
 import os
 
+
 class Config:
-    GOOGLE_MAPS_API_KEY: str = os.getenv("GOOGLE_MAPS_API_KEY")
+    DEBUG: bool = os.getenv("DEBUG") == "true"
+
+    DATABASE_URL: str = os.getenv("DATABASE_URL")
+
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
+    MODEL_NAME: str = os.getenv("MODEL_NAME")
+    MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER")
