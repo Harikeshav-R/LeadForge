@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.orm import Session
 
 from app import models
@@ -12,19 +14,15 @@ def create_workflow(db: Session, workflow: schemas.WorkflowCreate):
     return db_workflow
 
 
-def get_workflow(db: Session, workflow_db_id: int):
+def get_workflow(db: Session, workflow_db_id: uuid.UUID):
     return db.query(models.Workflow).filter(models.Workflow.id == workflow_db_id).first()
-
-
-def get_workflow_by_workflow_id(db: Session, workflow_id: str):
-    return db.query(models.Workflow).filter(models.Workflow.workflow_id == workflow_id).first()
 
 
 def get_workflows(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Workflow).offset(skip).limit(limit).all()
 
 
-def update_workflow(db: Session, workflow_db_id: int, workflow_update: schemas.WorkflowUpdate):
+def update_workflow(db: Session, workflow_db_id: uuid.UUID, workflow_update: schemas.WorkflowUpdate):
     db_workflow = get_workflow(db, workflow_db_id)
     if not db_workflow:
         return None
@@ -39,7 +37,7 @@ def update_workflow(db: Session, workflow_db_id: int, workflow_update: schemas.W
     return db_workflow
 
 
-def delete_workflow(db: Session, workflow_db_id: int):
+def delete_workflow(db: Session, workflow_db_id: uuid.UUID):
     db_workflow = get_workflow(db, workflow_db_id)
     if db_workflow:
         db.delete(db_workflow)
