@@ -9,7 +9,7 @@ PROD_COMPOSE_FILE := -f docker-compose.prod.yml
 .DEFAULT_GOAL := help
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: prune dev dev-up dev-build dev-down dev-stop dev-restart dev-logs dev-logs-backend dev-logs-frontend dev-shell-backend dev-shell-frontend dev-shell-db prod prod-up prod-build prod-down prod-stop prod-restart prod-logs prod-logs-backend prod-logs-frontend prod-shell-backend prod-shell-frontend prod-shell-db
+.PHONY: prune dev dev-up dev-build dev-down dev-stop dev-restart dev-logs dev-logs-backend dev-logs-frontend dev-logs-leads dev-shell-backend dev-shell-frontend dev-shell-db dev-shell-leads prod prod-up prod-build prod-down prod-stop prod-restart prod-logs prod-logs-backend prod-logs-frontend prod-logs-leads prod-shell-backend prod-shell-frontend prod-shell-db prod-shell-leads
 
 # --- General Utility Commands ---
 
@@ -80,7 +80,7 @@ dev-shell-leads: ## Open a bash shell inside the running development leads conta
 
 dev-shell-db: ## Open a psql shell to interact with the development PostgreSQL database.
 	@echo "Opening psql shell in db container..."
-	@docker-compose $(DEV_COMPOSE_FILE) exec db psql -U $$(grep POSTGRES_USER .env | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env | cut -d '=' -f2)
+	@docker-compose $(DEV_COMPOSE_FILE) exec db psql -U $$(grep POSTGRES_USER .env.dev | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env.dev | cut -d '=' -f2)
 
 
 # --- Production Environment Commands ---
@@ -137,4 +137,4 @@ prod-shell-leads: ## Open a bash shell inside the running production leads conta
 
 prod-shell-db: ## Open a psql shell to interact with the production PostgreSQL database.
 	@echo "Opening psql shell in production db container..."
-	@docker-compose $(PROD_COMPOSE_FILE) exec db psql -U $$(grep POSTGRES_USER .env | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env | cut -d '=' -f2)
+	@docker-compose $(PROD_COMPOSE_FILE) exec db psql -U $$(grep POSTGRES_USER .env.prod | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env.prod | cut -d '=' -f2)
