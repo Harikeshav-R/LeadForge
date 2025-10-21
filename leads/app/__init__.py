@@ -1,10 +1,23 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.agents.workflow import make_graph
+from app.core.config import Config
 from app.core.database import get_db
+from app.schemas.state import State
 
 app = FastAPI()
+
+if Config.DEBUG:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],  # Allows all standard HTTP methods (GET, POST, PUT, DELETE, etc.)
+        allow_headers=["*"],  # Allows all headers in the request
+    )
 
 
 @app.get("/")
