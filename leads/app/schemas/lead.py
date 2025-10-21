@@ -2,7 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from app.schemas import CapturedScreenshot
+from app.schemas.visual_analysis import CapturedScreenshot
 from app.schemas.google_maps_search import Location
 
 
