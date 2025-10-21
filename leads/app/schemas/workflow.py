@@ -27,4 +27,4 @@ class Workflow(WorkflowBase):
     final_state: State
 
     class Config:
-        orm_mode = True
+        from_attributes = True

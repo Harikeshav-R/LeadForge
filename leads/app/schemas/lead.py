@@ -56,8 +56,8 @@ class LeadUpdate(BaseModel):
 
 
 class Lead(LeadBase):
-    id: int
-    state_id: int
+    id: int = 0
+    state_id: int = 0
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -28,8 +28,8 @@ class StateUpdate(BaseModel):
 
 
 class State(StateBase):
-    id: int
+    id: int = 0
     leads: list[Lead] = Field(default_factory=list, description="Leads found in the city.")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
