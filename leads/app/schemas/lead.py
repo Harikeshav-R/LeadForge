@@ -4,7 +4,7 @@ from app.schemas import CapturedScreenshot
 from app.schemas.google_maps_search import Location
 
 
-class Lead(BaseModel):
+class LeadBase(BaseModel):
     place_id: str = Field(..., description="ID of the place on google maps.")
     name: str = Field(..., description="Name of the business.")
     address: str = Field(..., description="Address of the business.")
@@ -25,3 +25,14 @@ class Lead(BaseModel):
     screenshots: list[CapturedScreenshot] = Field(default_factory=list,
                                                   description="List of base64 encoded captured screenshots for different devices.")
     website_review: str = Field(None, description="Business website UI/UX review from the agent.")
+
+
+class LeadInDBBase(LeadBase):
+    id: int = Field(..., description="Database ID of the lead.")
+
+    class Config:
+        orm_mode = True
+
+
+class Lead(LeadInDBBase):
+    pass
