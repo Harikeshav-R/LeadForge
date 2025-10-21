@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.schemas.lead import Lead
@@ -15,12 +17,21 @@ class StateBase(BaseModel):
     messages: list[str] = Field(default_factory=list, description="List of messages generated during the search.")
 
 
-class StateInDBBase(StateBase):
-    id: int = Field(..., description="Database ID of the state.")
+class StateCreate(StateBase):
+    pass
+
+
+class StateUpdate(BaseModel):
+    city: Optional[str] = None
+    business_type: Optional[str] = None
+    radius: Optional[int] = None
+    min_rating: Optional[float] = None
+    max_results: Optional[int] = None
+    messages: Optional[list[str]] = None
+
+
+class State(StateBase):
+    id: int
 
     class Config:
         orm_mode = True
-
-
-class State(StateInDBBase):
-    pass
