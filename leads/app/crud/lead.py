@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.orm import Session
 
 from app import models
@@ -23,7 +25,7 @@ def create_lead(db: Session, lead: schemas.LeadCreate):
     return db_lead
 
 
-def get_lead(db: Session, lead_id: int):
+def get_lead(db: Session, lead_id: uuid.UUID):
     return db.query(models.Lead).filter(models.Lead.id == lead_id).first()
 
 
@@ -35,7 +37,7 @@ def get_leads(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Lead).offset(skip).limit(limit).all()
 
 
-def update_lead(db: Session, lead_id: int, lead_update: schemas.LeadUpdate):
+def update_lead(db: Session, lead_id: uuid.UUID, lead_update: schemas.LeadUpdate):
     db_lead = get_lead(db, lead_id)
     if not db_lead:
         return None
@@ -50,7 +52,7 @@ def update_lead(db: Session, lead_id: int, lead_update: schemas.LeadUpdate):
     return db_lead
 
 
-def delete_lead(db: Session, lead_id: int):
+def delete_lead(db: Session, lead_id: uuid.UUID):
     db_lead = get_lead(db, lead_id)
     if db_lead:
         db.delete(db_lead)

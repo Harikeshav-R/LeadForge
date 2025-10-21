@@ -1,6 +1,8 @@
+import uuid
 from typing import Optional
 
 from sqlalchemy import ForeignKey, String, JSON, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
@@ -10,7 +12,7 @@ from app.core import Base
 class Lead(Base):
     __tablename__ = "lead"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # Changed from int
     place_id: Mapped[str] = mapped_column(String, index=True, unique=True)
     name: Mapped[str] = mapped_column(String, index=True)
     address: Mapped[str]
@@ -42,5 +44,5 @@ class Lead(Base):
     )
 
     # Many-to-1: Many Leads belong to one State
-    state_id: Mapped[int] = mapped_column(ForeignKey("state.id"))
+    state_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("state.id"))  # Changed from int
     state: Mapped["State"] = relationship(back_populates="leads")

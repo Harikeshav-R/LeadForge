@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, Field
 
 from app.schemas.visual_analysis import CapturedScreenshot
@@ -31,7 +33,7 @@ class LeadBase(BaseModel):
 # Schema for creating a new lead in the DB.
 # It requires a state_id to link it to a State.
 class LeadCreate(LeadBase):
-    state_id: int
+    state_id: uuid.UUID = Field(..., description="ID of the state to which the lead belongs.")
 
 
 # Schema for partially updating an existing lead. All fields are optional.
@@ -60,8 +62,8 @@ class LeadUpdate(BaseModel):
 
 
 class Lead(LeadBase):
-    id: int = 0
-    state_id: int = 0
+    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the lead.")
+    state_id: uuid.UUID = Field(uuid.uuid4(), description="ID of the state to which the lead belongs.")
 
     class Config:
         from_attributes = True
