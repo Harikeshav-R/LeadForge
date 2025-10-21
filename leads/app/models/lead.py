@@ -13,7 +13,7 @@ class Lead(Base):
     __tablename__ = "lead"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # Changed from int
-    place_id: Mapped[str] = mapped_column(String, index=True, unique=True)
+    place_id: Mapped[str] = mapped_column(String, index=True)
     name: Mapped[str] = mapped_column(String, index=True)
     address: Mapped[str]
     phone_number: Mapped[Optional[str]]
