@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import ForeignKey, String, JSON, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,25 +14,25 @@ class Lead(Base):
     place_id: Mapped[str] = mapped_column(String, index=True, unique=True)
     name: Mapped[str] = mapped_column(String, index=True)
     address: Mapped[str]
-    phone_number: Mapped[str | None]
-    website: Mapped[str | None]
-    rating: Mapped[float | None]
-    total_ratings: Mapped[int | None]
-    category: Mapped[str | None]
-    price_level: Mapped[int | None]
-    is_open: Mapped[bool | None]
+    phone_number: Mapped[Optional[str]]
+    website: Mapped[Optional[str]]
+    rating: Mapped[Optional[float]]
+    total_ratings: Mapped[Optional[int]]
+    category: Mapped[Optional[str]]
+    price_level: Mapped[Optional[int]]
+    is_open: Mapped[Optional[bool]]
 
     # Embedded Location fields
     lat: Mapped[float]
     lng: Mapped[float]
 
     # Fields for simple lists, stored as JSON
-    emails: Mapped[list[str] | None] = mapped_column(JSON, default=list)
-    phone_numbers: Mapped[list[str] | None] = mapped_column(JSON, default=list)
-    social_media: Mapped[list[str] | None] = mapped_column(JSON, default=list)
+    emails: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
+    phone_numbers: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
+    social_media: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
 
     # Use Text for potentially long reviews
-    website_review: Mapped[str | None] = mapped_column(Text)
+    website_review: Mapped[Optional[str]] = mapped_column(Text)
 
     # --- Relationships ---
 

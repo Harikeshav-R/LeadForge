@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,7 +18,7 @@ class State(Base):
     max_results: Mapped[int] = mapped_column(default=10)
 
     # Simple list of messages, stored as JSON
-    messages: Mapped[list[str] | None] = mapped_column(JSON, default=list)
+    messages: Mapped[Optional[list[str]]] = mapped_column(JSON, default=list)
 
     # --- Relationships ---
 
@@ -26,9 +28,9 @@ class State(Base):
     )
 
     # Back-populates from Workflow (a State can be an initial or final state)
-    workflow_as_initial: Mapped["Workflow" | None] = relationship(
+    workflow_as_initial: Mapped[Optional["Workflow"]] = relationship(
         back_populates="initial_state", foreign_keys="[Workflow.initial_state_id]"
     )
-    workflow_as_final: Mapped["Workflow" | None] = relationship(
+    workflow_as_final: Mapped[Optional["Workflow"]] = relationship(
         back_populates="final_state", foreign_keys="[Workflow.final_state_id]"
     )
