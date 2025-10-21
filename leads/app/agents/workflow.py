@@ -6,7 +6,7 @@ from app.agents.lead_generator import generate_leads_node
 from app.schemas.state import State
 
 
-def make_graph() -> CompiledStateGraph:
+def create_compiled_state_graph() -> CompiledStateGraph:
     workflow = StateGraph(State)
     workflow.add_node("generate_leads", generate_leads_node)
     workflow.add_node("analyze_leads", analyze_leads_node)
@@ -30,6 +30,6 @@ def make_graph() -> CompiledStateGraph:
 if __name__ == "__main__":
     initial_state = State(city="Columbus, Ohio", business_type="restaurant")
 
-    final_state = State(**make_graph().invoke(initial_state))
+    final_state = State(**create_compiled_state_graph().invoke(initial_state))
 
     print(final_state.model_dump_json(indent=2, exclude={"leads": {"__all__": {"screenshots"}}}))
