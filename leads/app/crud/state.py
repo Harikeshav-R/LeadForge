@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.orm import Session
 
 from app import models
@@ -12,7 +14,7 @@ def create_state(db: Session, state: schemas.StateCreate):
     return db_state
 
 
-def get_state(db: Session, state_id: int):
+def get_state(db: Session, state_id: uuid.UUID):
     return db.query(models.State).filter(models.State.id == state_id).first()
 
 
@@ -20,7 +22,7 @@ def get_states(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.State).offset(skip).limit(limit).all()
 
 
-def update_state(db: Session, state_id: int, state_update: schemas.StateUpdate):
+def update_state(db: Session, state_id: uuid.UUID, state_update: schemas.StateUpdate):
     db_state = get_state(db, state_id)
     if not db_state:
         return None
@@ -35,7 +37,7 @@ def update_state(db: Session, state_id: int, state_update: schemas.StateUpdate):
     return db_state
 
 
-def delete_state(db: Session, state_id: int):
+def delete_state(db: Session, state_id: uuid.UUID):
     db_state = get_state(db, state_id)
     if db_state:
         db.delete(db_state)

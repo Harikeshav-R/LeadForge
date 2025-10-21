@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -19,16 +20,16 @@ class StateCreate(StateBase):
 
 
 class StateUpdate(BaseModel):
-    city: Optional[str] = None
-    business_type: Optional[str] = None
-    radius: Optional[int] = None
-    min_rating: Optional[float] = None
-    max_results: Optional[int] = None
-    messages: Optional[list[str]] = None
+    city: Optional[str] = Field(None, description="City name.")
+    business_type: Optional[str] = Field(None, description="Business type.")
+    radius: Optional[int] = Field(None, description="Radius in meters for search.")
+    min_rating: Optional[float] = Field(None, description="Minimum rating for businesses.")
+    max_results: Optional[int] = Field(None, description="Maximum number of results to return.")
+    messages: Optional[list[str]] = Field(None, description="List of messages generated during the search.")
 
 
 class State(StateBase):
-    id: int = 0
+    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the state.")
     leads: list[Lead] = Field(default_factory=list, description="Leads found in the city.")
 
     class Config:

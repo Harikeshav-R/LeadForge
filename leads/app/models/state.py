@@ -1,6 +1,8 @@
+import uuid
 from typing import Optional
 
 from sqlalchemy import JSON
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
@@ -10,7 +12,7 @@ from app.core import Base
 class State(Base):
     __tablename__ = "state"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # Changed from int
     city: Mapped[str]
     business_type: Mapped[str]
     radius: Mapped[int] = mapped_column(default=50000)
