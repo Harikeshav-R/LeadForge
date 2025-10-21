@@ -14,6 +14,9 @@ class StateBase(BaseModel):
     max_results: int = Field(10, description="Maximum number of results to return.")
     messages: list[str] = Field(default_factory=list, description="List of messages generated during the search.")
 
+    leads: list[Lead] = Field(default_factory=list, description="Leads found in the city.")
+
+
 
 class StateCreate(StateBase):
     pass
@@ -26,11 +29,12 @@ class StateUpdate(BaseModel):
     min_rating: Optional[float] = Field(None, description="Minimum rating for businesses.")
     max_results: Optional[int] = Field(None, description="Maximum number of results to return.")
     messages: Optional[list[str]] = Field(None, description="List of messages generated during the search.")
+    leads: Optional[list[Lead]] = Field(default_factory=list, description="Leads found in the city.")
+
 
 
 class State(StateBase):
     id: uuid.UUID = Field(uuid.uuid4(), description="ID of the state.")
-    leads: list[Lead] = Field(default_factory=list, description="Leads found in the city.")
 
     class Config:
         from_attributes = True
