@@ -4,7 +4,6 @@ from sqlalchemy import ForeignKey, String, JSON, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core import Base
-from app.schemas import Location
 
 
 # --- Lead Model ---
@@ -34,15 +33,6 @@ class Lead(Base):
 
     # Use Text for potentially long reviews
     website_review: Mapped[Optional[str]] = mapped_column(Text)
-
-    @property
-    def location(self) -> Location:
-        """
-        2. This property makes the SQLAlchemy model compatible with the Pydantic
-        schema that expects a nested 'location' object. It creates the
-        Location object on-the-fly from the model's lat and lng fields.
-        """
-        return Location(lat=self.lat, lng=self.lng)
 
     # --- Relationships ---
 

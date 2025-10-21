@@ -6,11 +6,7 @@ from app import schemas
 
 def create_lead(db: Session, lead: schemas.LeadCreate):
     # Exclude nested objects that need special handling
-    lead_data = lead.model_dump(exclude={'location', 'screenshots'})
-
-    # Add flattened location data
-    lead_data['lat'] = lead.location.lat
-    lead_data['lng'] = lead.location.lng
+    lead_data = lead.model_dump(exclude={'screenshots'})
 
     db_lead = models.Lead(**lead_data)
 

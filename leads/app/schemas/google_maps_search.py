@@ -9,11 +9,6 @@ class GoogleMapsSearchInput(BaseModel):
     max_results: int = Field(10, description="Maximum number of results to return.")
 
 
-class Location(BaseModel):
-    lat: float = Field(..., description="Latitude of the location.")
-    lng: float = Field(..., description="Longitude of the location.")
-
-
 class PlaceResult(BaseModel):
     place_id: str = Field(..., description="ID of the place on google maps.")
     name: str = Field(..., description="Name of the business.")
@@ -25,7 +20,9 @@ class PlaceResult(BaseModel):
     category: str | None = Field(None, description="Category of the business.")
     price_level: int | None = Field(None, description="Price level of the business.")
     is_open: bool | None = Field(None, description="Whether the business is open.")
-    location: Location = Field(..., description="Location coordinates of the business.")
+    # location: Location = Field(..., description="Location coordinates of the business.")
+    lat: float = Field(..., description="Latitude of the location.")
+    lng: float = Field(..., description="Longitude of the location.")
 
 
 class SearchMetadata(BaseModel):

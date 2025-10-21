@@ -7,7 +7,7 @@ from langchain_core.tools import tool
 from loguru import logger
 
 from app.core import Config
-from app.schemas import GoogleMapsSearchInput, GoogleMapsSearchOutput, SearchMetadata, PlaceResult, Location
+from app.schemas import GoogleMapsSearchInput, GoogleMapsSearchOutput, SearchMetadata, PlaceResult
 
 
 # --- Custom Exception Classes ---
@@ -229,7 +229,8 @@ class GoogleMapsClient:
             category=details.get("types", [None])[0],
             price_level=details.get("price_level"),
             is_open=details.get("opening_hours", {}).get("open_now"),
-            location=Location(**place.get("geometry", {}).get("location", {}))
+            lat=place.get("geometry", {}).get("location", {}).get("lat"),
+            lng=place.get("geometry", {}).get("location", {}).get("lng")
         )
 
     def _process_place_results(

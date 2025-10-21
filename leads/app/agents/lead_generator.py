@@ -84,7 +84,8 @@ def generate_leads_node(state: State) -> State:
                     category=result.category,
                     price_level=result.price_level,
                     is_open=result.is_open,
-                    location=result.location
+                    lat=result.lat,
+                    lng=result.lng
                 ) for result in google_maps_search_result.results
             ]
             logger.info(
