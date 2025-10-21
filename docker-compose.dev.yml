@@ -48,6 +48,22 @@ services:
       db:
         condition: service_healthy
 
+  builder:
+    container_name: builder_dev
+    build:
+      context: ./builder
+      target: dev # Use the 'dev' stage from the builder Dockerfile
+    volumes:
+      - ./builder:/builder # Mount local 'builder' folder into the container
+      - /builder/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     container_name: frontend_dev
     build:

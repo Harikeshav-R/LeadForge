@@ -9,7 +9,7 @@ PROD_COMPOSE_FILE := -f docker-compose.prod.yml
 .DEFAULT_GOAL := help
 
 # Phony targets prevent conflicts with files of the same name
-.PHONY: prune dev dev-up dev-build dev-down dev-stop dev-restart dev-logs dev-logs-backend dev-logs-frontend dev-logs-leads dev-shell-backend dev-shell-frontend dev-shell-db dev-shell-leads prod prod-up prod-build prod-down prod-stop prod-restart prod-logs prod-logs-backend prod-logs-frontend prod-logs-leads prod-shell-backend prod-shell-frontend prod-shell-db prod-shell-leads
+.PHONY: prune dev dev-up dev-build dev-down dev-stop dev-restart dev-logs dev-logs-backend dev-logs-frontend dev-logs-leads dev-logs-builder dev-shell-backend dev-shell-frontend dev-shell-db dev-shell-leads dev-shell-builder prod prod-up prod-build prod-down prod-stop prod-restart prod-logs prod-logs-backend prod-logs-frontend prod-logs-leads prod-logs-builder prod-shell-backend prod-shell-frontend prod-shell-db prod-shell-leads prod-shell-builder
 
 # --- General Utility Commands ---
 
@@ -66,6 +66,10 @@ dev-logs-leads: ## View and follow logs for the development leads service only.
 	@echo "Following leads logs..."
 	@docker-compose $(DEV_COMPOSE_FILE) logs -f leads
 
+dev-logs-builder: ## View and follow logs for the development builder service only.
+	@echo "Following builder logs..."
+	@docker-compose $(DEV_COMPOSE_FILE) logs -f builder
+
 dev-shell-backend: ## Open a bash shell inside the running development backend container.
 	@echo "Opening bash shell in backend container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec backend /bin/bash
@@ -75,8 +79,12 @@ dev-shell-frontend: ## Open a bash shell inside the running development frontend
 	@docker-compose $(DEV_COMPOSE_FILE) exec frontend /bin/bash
 
 dev-shell-leads: ## Open a bash shell inside the running development leads container.
-	@echo "Opening bash shell in frontend container..."
+	@echo "Opening bash shell in leads container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec leads /bin/bash
+
+dev-shell-builder: ## Open a bash shell inside the running development leads container.
+	@echo "Opening bash shell in builder container..."
+	@docker-compose $(DEV_COMPOSE_FILE) exec builder /bin/bash
 
 dev-shell-db: ## Open a psql shell to interact with the development PostgreSQL database.
 	@echo "Opening psql shell in db container..."
@@ -123,6 +131,10 @@ prod-logs-leads: ## View and follow logs for the production leads service only.
 	@echo "Following production leads logs..."
 	@docker-compose $(PROD_COMPOSE_FILE) logs -f leads
 
+prod-logs-builder: ## View and follow logs for the production builder service only.
+	@echo "Following production builder logs..."
+	@docker-compose $(PROD_COMPOSE_FILE) logs -f builder
+
 prod-shell-backend: ## Open a bash shell inside the running production backend container.
 	@echo "Opening bash shell in production backend container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec backend /bin/bash
@@ -134,6 +146,10 @@ prod-shell-frontend: ## Open a bash shell inside the running production frontend
 prod-shell-leads: ## Open a bash shell inside the running production leads container.
 	@echo "Opening bash shell in production leads container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec leads /bin/bash
+
+prod-shell-builder: ## Open a bash shell inside the running production builder container.
+	@echo "Opening bash shell in production builder container..."
+	@docker-compose $(PROD_COMPOSE_FILE) exec builder /bin/bash
 
 prod-shell-db: ## Open a psql shell to interact with the production PostgreSQL database.
 	@echo "Opening psql shell in production db container..."
