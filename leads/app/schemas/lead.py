@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.schemas import CapturedScreenshot
@@ -27,12 +29,35 @@ class LeadBase(BaseModel):
     website_review: str = Field(None, description="Business website UI/UX review from the agent.")
 
 
-class LeadInDBBase(LeadBase):
-    id: int = Field(..., description="Database ID of the lead.")
+# Schema for creating a new lead in the DB.
+# It requires a state_id to link it to a State.
+class LeadCreate(LeadBase):
+    state_id: int
+
+
+# Schema for partially updating an existing lead. All fields are optional.
+class LeadUpdate(BaseModel):
+    place_id: Optional[str] = None
+    name: Optional[str] = None
+    address: Optional[str] = None
+    phone_number: Optional[str] = None
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    total_ratings: Optional[int] = None
+    category: Optional[str] = None
+    price_level: Optional[int] = None
+    is_open: Optional[bool] = None
+    location: Optional[Location] = None
+    emails: Optional[list[str]] = None
+    phone_numbers: Optional[list[str]] = None
+    social_media: Optional[list[str]] = None
+    screenshots: Optional[list[CapturedScreenshot]] = None
+    website_review: Optional[str] = None
+
+
+class Lead(LeadBase):
+    id: int
+    state_id: int
 
     class Config:
         orm_mode = True
-
-
-class Lead(LeadInDBBase):
-    pass
