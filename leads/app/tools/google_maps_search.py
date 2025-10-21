@@ -6,7 +6,7 @@ from googlemaps.exceptions import ApiError, HTTPError, Timeout, TransportError
 from langchain_core.tools import tool
 from loguru import logger
 
-from app.core.config import Config
+from app.core import Config
 from app.schemas import GoogleMapsSearchInput, GoogleMapsSearchOutput, SearchMetadata, PlaceResult, Location
 
 

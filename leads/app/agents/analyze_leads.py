@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 from loguru import logger
 
-from app.core.config import Config
+from app.core import Config
 from app.schemas import (
     ContactScraperInput, ContactScraperOutput,
     VisualAnalysisInput, VisualAnalysisOutput
