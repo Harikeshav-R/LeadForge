@@ -83,7 +83,7 @@ class WebsiteScreenshotter:
                     page.set_viewport_size(dims)
                     logger.debug(f"Navigating to {url}...")
                     page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                    page.wait_for_timeout(5000)
+                    page.wait_for_timeout(1000)
 
                     png_screenshot = page.screenshot(full_page=False, type="png")
                     base64_image = f"data:image/png;base64,{base64.b64encode(png_screenshot).decode('utf-8')}"
