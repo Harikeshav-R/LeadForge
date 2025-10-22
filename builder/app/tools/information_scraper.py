@@ -275,7 +275,7 @@ class WebsiteScraper:
 
 
 @tool(args_schema=InformationScraperInput)
-def run_scraper(url: str, limit: int = 10) -> InformationScraperOutput:
+def information_scraper(url: str, limit: int = 10) -> InformationScraperOutput:
     """
     Initializes and runs a new WebsiteScraper instance.
 
@@ -309,7 +309,7 @@ if __name__ == "__main__":
 
     # --- Run the Scraper using the global function ---
     logger.info("--- Starting Scraper ---")
-    crawled_data = run_scraper.invoke(InformationScraperInput(url=START_URL, limit=SCRAPE_LIMIT).model_dump())
+    crawled_data = information_scraper.invoke(InformationScraperInput(url=START_URL, limit=SCRAPE_LIMIT).model_dump())
 
     if crawled_data.pages:
         # Convert the Pydantic model to a JSON string

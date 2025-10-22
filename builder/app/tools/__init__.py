@@ -1,0 +1,1 @@
+from app.tools.information_scraper import information_scraper
