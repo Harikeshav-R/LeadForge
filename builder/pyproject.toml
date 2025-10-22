@@ -5,11 +5,13 @@ description = "Agent to build websites from a single prompt"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "beautifulsoup4>=4.14.2",
     "fastapi[all]>=0.119.1",
     "langchain>=1.0.1",
     "langchain-google-genai>=3.0.0",
     "langgraph>=1.0.1",
     "loguru>=0.7.3",
     "psycopg2-binary>=2.9.11",
+    "requests>=2.32.5",
     "sqlalchemy>=2.0.44",
 ]
