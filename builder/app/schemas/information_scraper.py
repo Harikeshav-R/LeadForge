@@ -30,7 +30,7 @@ class Headings(BaseModel):
     h6: list[str] = Field(default_factory=list, description="A list of all text content from <h6> tags.")
 
 
-class PageData(BaseModel):
+class PageScrapedData(BaseModel):
     """Pydantic schema for all data scraped from a single page."""
     url: str = Field(..., description="The normalized, absolute URL of the scraped page.")
     title: Optional[str] = Field(None, description="The text content of the page's <title> tag.")
@@ -52,4 +52,4 @@ class PageData(BaseModel):
 
 class InformationScraperOutput(BaseModel):
     """Pydantic schema for the entire crawl result (a list of pages)."""
-    pages: list[PageData] = Field(..., description="A list of all PageData objects successfully scraped.")
+    pages: list[PageScrapedData] = Field(..., description="A list of all PageData objects successfully scraped.")
