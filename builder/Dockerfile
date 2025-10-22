@@ -11,6 +11,12 @@ COPY pyproject.toml uv.lock ./
 # Install deps.
 RUN uv sync --frozen --no-cache
 
+# Install node and npm
+RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
+
+# Install gemini-cli
+RUN npm install -g @google/gemini-cli
+
 # Copy project sources
 COPY . .
 
