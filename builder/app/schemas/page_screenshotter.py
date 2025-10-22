@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 
 
 class PageScreenshotterInput(BaseModel):
@@ -10,5 +10,4 @@ class PageScreenshotData(BaseModel):
     screenshot: str = Field(..., description="Base64-encoded screenshot image of the page.")
 
 
-class PageScreenshotterOutput(BaseModel):
-    pages: list[PageScreenshotData] = Field(..., description="List of pages with screenshots.")
+PageScreenshotterOutput = RootModel[list[PageScreenshotData]]

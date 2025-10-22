@@ -121,7 +121,7 @@ def get_parallel_screenshots(urls: list[str]) -> PageScreenshotterOutput:
     logger.info(f"Received request to screenshot {len(urls)} URLs.")
     if not urls:
         logger.warning("No URLs provided, returning empty list.")
-        return PageScreenshotterOutput(pages=[])
+        return PageScreenshotterOutput([])
 
     screenshotter = PageScreenshotter(urls)
 
@@ -137,7 +137,7 @@ def get_parallel_screenshots(urls: list[str]) -> PageScreenshotterOutput:
     logger.success(f"Screenshot process finished. Success: {len(successful_pages)}, Failed: {failed_count}")
 
     # Return the final Pydantic model
-    return PageScreenshotterOutput(pages=successful_pages)
+    return PageScreenshotterOutput(successful_pages)
 
 
 if __name__ == "__main__":
@@ -152,14 +152,15 @@ if __name__ == "__main__":
 
     logger.info("--- Starting Screenshot Tool ---")
 
-    screenshot_output = get_parallel_screenshots.invoke(PageScreenshotterInput(urls=example_urls).model_dump())
+    screenshot_output: PageScreenshotterOutput = get_parallel_screenshots.invoke(
+        PageScreenshotterInput(urls=example_urls).model_dump())
 
     logger.success("\n--- Tool Output (Successful) ---")
 
     # The output is a Pydantic model
-    if screenshot_output.pages:
+    if screenshot_output.root:
         # Print summary
-        for page in screenshot_output.pages:
+        for page in screenshot_output.root:
             logger.success(f"  URL: {page.url}")
             logger.success(f"  Screenshot (Base64): {page.screenshot[:70]}...")
             logger.success("  " + "-" * 20)
