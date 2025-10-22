@@ -11,11 +11,11 @@ COPY pyproject.toml uv.lock ./
 # Install deps.
 RUN uv sync --frozen --no-cache
 
-# Copy project sources
-COPY . .
-
 # Install chromium
 RUN apt-get update && uv run playwright install --with-deps chromium
+
+# Copy project sources
+COPY . .
 
 # Stage 2: Development image
 FROM base AS dev
