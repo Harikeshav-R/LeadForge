@@ -100,8 +100,8 @@ def get_visual_analysis(lead: Lead) -> tuple[VisualAnalysisOutput, str]:
 
         # Step 2: Initialize the Gemini client for the review.
         gemini_client = init_chat_model(
-            "gemini-2.5-flash",
-            model_provider="google_genai",
+            Config.MODEL_NAME,
+            model_provider=Config.MODEL_PROVIDER,
             api_key=Config.GEMINI_API_KEY
         )
 
