@@ -26,7 +26,7 @@ class State(Base):
 
     # One-to-Many: A State can have many scraped pages.
     pages_scraped = relationship(
-        "PageScrapedDataModel",
+        "PageScraped",
         back_populates="state",
         cascade="all, delete-orphan",
         doc="List of scraped page data associated with this state."
@@ -34,7 +34,7 @@ class State(Base):
 
     # One-to-Many: A State can have many page screenshots.
     pages_screenshots = relationship(
-        "PageScreenshotDataModel",
+        "PageScreenshot",
         back_populates="state",
         cascade="all, delete-orphan",
         doc="List of page screenshots associated with this state."
