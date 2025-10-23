@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from app.core import Base
 
 
-class PageScrapedDataModel(Base):
+class PageScraped(Base):
     """
     SQLAlchemy model for 'PageScrapedData'.
     Stores all content scraped from a single URL.
@@ -32,7 +32,7 @@ class PageScrapedDataModel(Base):
 
     # One-to-One: Each scraped page has exactly one set of headings.
     headings = relationship(
-        "HeadingsModel",
+        "Headings",
         back_populates="page_scraped_data",
         uselist=False,  # Specifies this is a one-to-one relationship
         cascade="all, delete-orphan",
@@ -41,7 +41,7 @@ class PageScrapedDataModel(Base):
 
     # One-to-Many: Each scraped page can have many links.
     links = relationship(
-        "LinkModel",
+        "Link",
         back_populates="page_scraped_data",
         cascade="all, delete-orphan",
         doc="List of hyperlinks found on this page."
@@ -49,7 +49,7 @@ class PageScrapedDataModel(Base):
 
     # One-to-Many: Each scraped page can have many images.
     images = relationship(
-        "ImageModel",
+        "Image",
         back_populates="page_scraped_data",
         cascade="all, delete-orphan",
         doc="List of images found on this page."
@@ -59,7 +59,7 @@ class PageScrapedDataModel(Base):
 # --- Headings Model ---
 # Stores the h1-h6 tags for a PageScrapedData.
 
-class HeadingsModel(Base):
+class Headings(Base):
     """
     SQLAlchemy model for 'Headings'.
     Stores lists of heading text, linked one-to-one with a PageScrapedData.
@@ -86,13 +86,13 @@ class HeadingsModel(Base):
     )
 
     # Back-population for the one-to-one relationship.
-    page_scraped_data = relationship("PageScrapedDataModel", back_populates="headings")
+    page_scraped_data = relationship("PageScraped", back_populates="headings")
 
 
 # --- Link Model ---
 # Stores a single hyperlink for a PageScrapedData.
 
-class LinkModel(Base):
+class Link(Base):
     """
     SQLAlchemy model for 'Link'.
     Stores a single hyperlink (text and href).
@@ -112,13 +112,13 @@ class LinkModel(Base):
     )
 
     # Many-to-One: Links this link back to its parent page.
-    page_scraped_data = relationship("PageScrapedDataModel", back_populates="links")
+    page_scraped_data = relationship("PageScraped", back_populates="links")
 
 
 # --- Image Model ---
 # Stores a single image for a PageScrapedData.
 
-class ImageModel(Base):
+class Image(Base):
     """
     SQLAlchemy model for 'Image'.
     Stores a single image (src and alt text).
@@ -139,4 +139,4 @@ class ImageModel(Base):
 
     # Many-to-One: Links this image back to its parent page.
     page_scraped_data = (
-        relationship("PageScrapedDataModel", back_populates="images"))
+        relationship("PageScraped", back_populates="images"))

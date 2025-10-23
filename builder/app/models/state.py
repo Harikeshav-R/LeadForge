@@ -8,7 +8,7 @@ from sqlalchemy.types import Uuid
 from app.core import Base
 
 
-class StateModel(Base):
+class State(Base):
     """
     SQLAlchemy model for the main 'State'.
     This is the root object that ties all other data together.
