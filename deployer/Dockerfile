@@ -22,9 +22,9 @@ COPY . .
 
 # Stage 2: Development image
 FROM sources AS dev
-CMD ["uv", "run" ,"uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run" ,"uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8003", "--reload"]
 
 
 # Stage 3: Production image
 FROM sources AS prod
-CMD ["uv", "run" ,"uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uv", "run" ,"uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8003", "--workers", "4"]

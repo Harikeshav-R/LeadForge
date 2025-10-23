@@ -65,6 +65,24 @@ services:
       db:
         condition: service_healthy
 
+  deployer:
+    container_name: deployer_dev
+    build:
+      context: ./deployer
+      target: dev # Use the 'dev' stage from the deployer Dockerfile
+    volumes:
+      - ./deployer:/deployer # Mount local 'backend' folder into the container
+      - /deployer/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+
   frontend:
     container_name: frontend_dev
     build:
