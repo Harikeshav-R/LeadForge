@@ -1,3 +1,5 @@
+import base64
+
 from loguru import logger
 
 from app.schemas import State, WebsiteCoderInput, WebsiteCoderOutput
@@ -45,7 +47,7 @@ def website_builder_node(state: State) -> State:
         # 4. Return the new state on success
         return state.model_copy(
             update={
-                "final_website_zip": output.root,
+                "final_website_zip": base64.b64encode(output.root),
             }
         )
 
