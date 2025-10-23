@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from app.core import Base
 
 
-class PageScreenshotDataModel(Base):
+class PageScreenshot(Base):
     """
     SQLAlchemy model for 'PageScreenshotData'.
     Stores a URL and its corresponding Base64-encoded screenshot.
