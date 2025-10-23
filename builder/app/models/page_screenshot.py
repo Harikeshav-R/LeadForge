@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import Column, Text, Uuid, String, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -11,7 +13,7 @@ class PageScreenshot(Base):
     """
     __tablename__ = "page_screenshot_data"
 
-    id = Column(Uuid, primary_key=True, index=True)
+    id = Column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     url = Column(String(2048), nullable=False, comment="URL of the page that was screenshotted.")
     screenshot = Column(Text, nullable=False, comment="Base64-encoded screenshot image.")
 
