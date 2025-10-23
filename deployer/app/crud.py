@@ -41,7 +41,7 @@ def read_website(db: Session, website_id: uuid.UUID) -> models.Website | None:
     return db.query(models.Website).filter(models.Website.id == website_id).first()
 
 
-def read_all_website(db: Session, skip: int = 0, limit: int = 100) -> list[models.Website]:
+def read_all_websites(db: Session, skip: int = 0, limit: int = 100) -> list[models.Website]:
     """Retrieves a list of websites from the database with pagination.
 
     Args:
