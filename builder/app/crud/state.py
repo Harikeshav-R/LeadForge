@@ -82,7 +82,7 @@ def create_state(db: Session, state_in: schemas.StateCreate) -> models.State:
 
 
 # --- READ (Single) ---
-def get_state(db: Session, state_id: uuid.UUID) -> models.State | None:
+def read_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     db_state = db.query(models.State).options(
         joinedload(models.State.pages_scraped).options(
             joinedload(models.PageScraped.headings),
@@ -96,7 +96,7 @@ def get_state(db: Session, state_id: uuid.UUID) -> models.State | None:
 
 
 # --- READ (Multiple) ---
-def get_states(db: Session, skip: int = 0, limit: int = 100) -> list[models.State]:
+def read_all_states(db: Session, skip: int = 0, limit: int = 100) -> list[models.State]:
     """
     Retrieves a list of State records.
 
@@ -116,7 +116,7 @@ def update_state(db: Session, state_id: uuid.UUID, state_in: schemas.StateUpdate
     from the 'state_in' schema.
     """
     # 1. Get the existing state, including all its children
-    db_state = get_state(db, state_id)
+    db_state = read_state(db, state_id)
 
     if not db_state:
         return None
