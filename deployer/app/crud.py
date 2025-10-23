@@ -7,10 +7,10 @@ from app import models
 from app import schemas
 
 
-def create_website(db: Session, website: schemas.WebsiteCreate) -> models.Website:
+def create_website(db: Session, website: schemas.Website) -> models.Website:
     try:
         # Create a new Website model instance from the provided schema data.
-        db_website = models.Website(name=website.name)
+        db_website = models.Website(name=website.name, url=website.url)
         logger.debug(f"Website data prepared for website creation: {db_website}")
 
         # Add, commit, and refresh to persist the new website and get its DB-generated values.
