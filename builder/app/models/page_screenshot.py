@@ -19,4 +19,4 @@ class PageScreenshot(Base):
     state_id = Column(Uuid, ForeignKey("state.id"), nullable=False, index=True)
 
     # Many-to-One: Links this screenshot back to its parent State.
-    state = relationship("StateModel", back_populates="pages_screenshots")
+    state = relationship("State", back_populates="pages_screenshots")
