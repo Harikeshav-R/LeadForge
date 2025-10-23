@@ -14,7 +14,7 @@ def _map_pydantic_children_to_model(state_in: schemas.State, db_state: models.St
             title=page_data.title,
             meta_description=page_data.meta_description,
             paragraphs=page_data.paragraphs,
-            state=db_state  # Link to the parent StateModel
+            state=db_state  # Link to the parent State
         )
 
         # 1a. Map Headings (One-to-One)
@@ -53,7 +53,7 @@ def _map_pydantic_children_to_model(state_in: schemas.State, db_state: models.St
         db_screenshot = models.PageScreenshot(
             url=screenshot_data.url,
             screenshot=screenshot_data.screenshot,
-            state=db_state  # Link to the parent StateModel
+            state=db_state  # Link to the parent State
         )
 
 
@@ -61,9 +61,8 @@ def _map_pydantic_children_to_model(state_in: schemas.State, db_state: models.St
 
 # --- CREATE ---
 def create_state(db: Session, state_in: schemas.StateCreate) -> models.State:
-    # 1. Create the parent StateModel object from the schema's scalar fields
+    # 1. Create the parent State object from the schema's scalar fields
     db_state = models.State(
-        id=state_in.id,  # Use the ID from the Pydantic schema
         initial_website_url=state_in.initial_website_url,
         initial_website_scrape_limit=state_in.initial_website_scrape_limit,
         prompt=state_in.prompt,
@@ -133,7 +132,7 @@ def update_state(db: Session, state_id: uuid.UUID, state_in: schemas.StateUpdate
     db_state.pages_screenshots.clear()
 
     # 4. Re-map the new children from the input schema
-    _map_pydantic_children_to_model(state_in, db_state)
+    _map_pydantic_children_to_model(schemas.State(**state_in.model_dump()), db_state)
 
     # 5. Commit the transaction
     db.commit()
@@ -147,7 +146,7 @@ def delete_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     Deletes a State record by its UUID.
 
     Thanks to 'cascade="all, delete-orphan"', deleting the parent
-    StateModel will automatically delete all its children records from
+    State will automatically delete all its children records from
     all related tables.
     """
     # .get() is the most efficient way to fetch by primary key
