@@ -107,7 +107,7 @@ class PageScreenshotter:
 
 # --- Global Wrapper Function ---
 @tool(args_schema=PageScreenshotterInput)
-def get_parallel_screenshots(urls: list[str]) -> PageScreenshotterOutput:
+def page_screenshotter(urls: list[str]) -> PageScreenshotterOutput:
     """
     A global wrapper function that instantiates and runs the PageScreenshotter.
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
     logger.info("--- Starting Screenshot Tool ---")
 
-    screenshot_output: PageScreenshotterOutput = get_parallel_screenshots.invoke(
+    screenshot_output: PageScreenshotterOutput = page_screenshotter.invoke(
         PageScreenshotterInput(urls=example_urls).model_dump())
 
     logger.success("\n--- Tool Output (Successful) ---")

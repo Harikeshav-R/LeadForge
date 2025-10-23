@@ -162,7 +162,7 @@ class WebsiteCoder:
 
 
 @tool(args_schema=WebsiteCoderInput)
-def create_website_archive(prompt: str) -> WebsiteCoderOutput:
+def website_coder(prompt: str) -> WebsiteCoderOutput:
     """Convenience function to create a website archive.
 
     Instantiates WebsiteCoder, runs the code_and_archive process,
@@ -199,7 +199,7 @@ if __name__ == "__main__":
 
     logger.info(f"\nAttempting live run with prompt: '{test_prompt}'")
 
-    website_zip_bytes: WebsiteCoderOutput = create_website_archive.invoke(
+    website_zip_bytes: WebsiteCoderOutput = website_coder.invoke(
         WebsiteCoderInput(prompt=test_prompt).model_dump())
 
     if website_zip_bytes:
