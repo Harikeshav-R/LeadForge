@@ -2,6 +2,15 @@
 FROM python:3.13-slim AS base
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+
+WORKDIR /root
+
+# Make gemini folder on container
+RUN mkdir -p /root/.gemini
+
+# Copy gemini auth files
+COPY ./.gemini /root/.gemini
+
 WORKDIR /builder
 
 
