@@ -1,77 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { CampaignForm } from './components/CampaignForm';
-import { PipelineProgress } from './components/PipelineProgress';
 import { LeadsTable } from './components/LeadsTable';
-import type { Lead, CampaignData, PipelineStage } from './types';
+import type { Lead, CampaignData } from './types';
 
-// Import API testing utilities for development
-import './utils/apiTest';
-
-/**
- * Mock pipeline stages for demonstration
- * In a real app, these would come from the API
- */
-const mockStages: PipelineStage[] = [
-  {
-    id: '1',
-    name: 'Business Discovery',
-    status: 'completed',
-    icon: 'search',
-    description: 'Searching for businesses in the target area',
-  },
-  {
-    id: '2',
-    name: 'Contact Enrichment',
-    status: 'active',
-    icon: 'mail',
-    description: 'Finding email addresses and contact details',
-  },
-  {
-    id: '3',
-    name: 'Phone Verification',
-    status: 'pending',
-    icon: 'phone',
-    description: 'Verifying phone numbers and availability',
-  },
-  {
-    id: '4',
-    name: 'Lead Qualification',
-    status: 'pending',
-    icon: 'check',
-    description: 'Scoring and prioritizing leads',
-  },
-];
-
-/**
- * Main application component
- * Single-page application with search at top and dashboard below
- */
 function App() {
-  // Application state
   const [campaignData, setCampaignData] = useState<CampaignData>({
     searchQuery: '',
     leads: [],
     isActive: false,
   });
 
-  // Scroll visibility state
   const [isScrolledDown, setIsScrolledDown] = useState(false);
 
-  /**
-   * Handle scroll events to determine dashboard visibility
-   */
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
-      const searchSectionHeight = windowHeight * 0.6; // Show dashboard when 60% scrolled
+      const searchSectionHeight = windowHeight * 0.6;
       
-      // Show dashboard when scrolled past search section
       setIsScrolledDown(scrollTop > searchSectionHeight);
     };
 
-    // Throttle scroll events for better performance
     let ticking = false;
     const throttledHandleScroll = () => {
       if (!ticking) {
@@ -87,10 +37,6 @@ function App() {
     return () => window.removeEventListener('scroll', throttledHandleScroll);
   }, []);
 
-  /**
-   * Handle starting a new campaign with search results
-   * Automatically scrolls to dashboard after search
-   */
   const handleStartCampaign = (searchQuery: string, leads: Lead[]) => {
     setCampaignData({
       searchQuery,
@@ -98,7 +44,6 @@ function App() {
       isActive: true,
     });
 
-    // Auto-scroll to dashboard after a short delay
     setTimeout(() => {
       const dashboardElement = document.getElementById('dashboard-section');
       if (dashboardElement) {
@@ -147,14 +92,6 @@ function App() {
                   </p>
                 </div>
 
-                {/* Pipeline Progress */}
-                <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-6">
-                    Processing Pipeline
-                  </h3>
-                  <PipelineProgress stages={mockStages} />
-                </div>
-
                 {/* Leads Table */}
                 <div>
                   <LeadsTable leads={campaignData.leads} />
@@ -198,21 +135,6 @@ function App() {
                   </p>
                 </div>
 
-                {/* Pipeline Preview */}
-                <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-6">
-                    Processing Pipeline
-                  </h3>
-                  <div className="bg-gray-50 rounded-lg p-8 border-2 border-dashed border-gray-300">
-                    <div className="text-center">
-                      <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      <h4 className="text-lg font-semibold text-gray-700 mb-2">Pipeline Status</h4>
-                      <p className="text-gray-500">AI agents will process your search through multiple stages</p>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Results Preview */}
                 <div>

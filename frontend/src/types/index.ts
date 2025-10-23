@@ -54,14 +54,6 @@ export interface SearchRequest {
   leads?: Lead[];
 }
 
-export interface PipelineStage {
-  id: string;
-  name: string;
-  status: 'pending' | 'active' | 'completed';
-  icon: 'search' | 'mail' | 'phone' | 'check';
-  description: string;
-}
-
 export interface CampaignData {
   searchQuery: string;
   leads: Lead[];

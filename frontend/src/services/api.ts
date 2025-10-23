@@ -1,9 +1,5 @@
-// API service for Lead Generation application
 import type { Lead, WorkflowResponse, SearchRequest } from '../types';
 
-/**
- * Configuration for the API service
- */
 const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_LEADS_API_URL || 'http://localhost:8001',
   ENDPOINTS: {
@@ -11,20 +7,15 @@ const API_CONFIG = {
     HEALTH: '/docs',
   },
   DEFAULT_SETTINGS: {
-    RADIUS: 25000, // 25km radius for faster processing
+    RADIUS: 25000,
     MIN_RATING: 0.0,
-    MAX_RESULTS: 2, // Reduced to 2 for faster processing
+    MAX_RESULTS: 2,
   }
 };
-
-/**
- * Utility class for handling API errors
- */
 class ApiErrorHandler {
   static async parseError(response: Response): Promise<string> {
     try {
       const errorData = await response.json();
-      console.error('API Error Response:', errorData);
       
       if (errorData.detail) {
         return this.formatErrorDetail(errorData.detail);
@@ -36,7 +27,6 @@ class ApiErrorHandler {
       
       return `HTTP Error: ${response.status} - ${response.statusText}`;
     } catch (parseError) {
-      console.error('Failed to parse error response:', parseError);
       return `HTTP Error: ${response.status} - ${response.statusText}`;
     }
   }

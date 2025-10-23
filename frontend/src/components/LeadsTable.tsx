@@ -1,7 +1,6 @@
 import { Card } from './Card';
-import { Badge } from './Badge';
 import { Button } from './Button';
-import { ExternalLink, Mail, Phone, Building2 } from 'lucide-react';
+import { ExternalLink, Mail, Phone, Building2, Globe } from 'lucide-react';
 import type { Lead } from '../types';
 
 interface LeadsTableProps {
@@ -9,13 +8,6 @@ interface LeadsTableProps {
 }
 
 export function LeadsTable({ leads }: LeadsTableProps) {
-  const getStatusBadge = (isOpen?: boolean) => {
-    if (isOpen === undefined) {
-      return <Badge variant="gray">Unknown</Badge>;
-    }
-    return isOpen ? <Badge variant="green">Open</Badge> : <Badge variant="red">Closed</Badge>;
-  };
-
   if (leads.length === 0) {
     return (
       <Card className="text-center py-16">
@@ -44,9 +36,6 @@ export function LeadsTable({ leads }: LeadsTableProps) {
               </th>
               <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
                 Contact
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Status
               </th>
               <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
                 Actions
@@ -95,22 +84,56 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                   </div>
                 </td>
                 <td className="px-8 py-6">
-                  {getStatusBadge(lead.is_open)}
-                </td>
-                <td className="px-8 py-6">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-2">
+                    {/* Send Email Button */}
+                    {lead.emails.length > 0 && (
+                      <Button
+                        variant="primary"
+                        className="text-sm py-2 px-4 flex items-center gap-2"
+                      >
+                        <Mail className="w-4 h-4" />
+                        Send Email
+                      </Button>
+                    )}
+                    
+                    {/* Call Business Button */}
+                    {(lead.phone_number || lead.phone_numbers.length > 0) && (
+                      <Button
+                        variant="secondary"
+                        className="text-sm py-2 px-4 flex items-center gap-2"
+                      >
+                        <Phone className="w-4 h-4" />
+                        Call Business
+                      </Button>
+                    )}
+                    
+                    {/* View Website Button */}
                     {lead.website && (
                       <Button
                         variant="secondary"
-                        className="text-sm py-2 px-3"
+                        className="text-sm py-2 px-4 flex items-center gap-2"
                         onClick={() => window.open(lead.website, '_blank')}
                       >
                         <ExternalLink className="w-4 h-4" />
+                        View Website
                       </Button>
                     )}
-                    <Button variant="secondary" className="text-sm py-2 px-4">
-                      View Details
+                    
+                    {/* Build Website Button */}
+                    <Button
+                      variant="secondary"
+                      className="text-sm py-2 px-4 flex items-center gap-2"
+                    >
+                      <Globe className="w-4 h-4" />
+                      Build Website
                     </Button>
+                    
+                    {/* Show message if no contact info available */}
+                    {lead.emails.length === 0 && !lead.phone_number && lead.phone_numbers.length === 0 && !lead.website && (
+                      <div className="text-sm text-gray-500 italic">
+                        No contact information available
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
