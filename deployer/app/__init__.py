@@ -1,38 +1,37 @@
 import os
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
-from sqlalchemy.orm import Session
 
-from app.core.database import get_db
+from app.api import router
+from app.config import Config
+from app.database import Base, engine
 
-app = FastAPI()
+Base.metadata.create_all(bind=engine)
 
-if os.getenv("DEBUG") == "true":
-    # CORS Middleware for development
-    # This allows the frontend (running on localhost:5173) to communicate with the backend.
+
+# --- Lifespan Event Handler (Startup) ---
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    os.makedirs(Config.DEPLOYED_SITES_DIR, exist_ok=True)
+    print(f"Server startup complete. Hosting sites from: {os.path.abspath(Config.DEPLOYED_SITES_DIR)}")
+    yield
+
+    # Code below yield runs on shutdown (e.g., cleanup)
+    print("Server shutting down.")
+
+
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(router)
+
+if Config.DEBUG:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],  # Allows the dev frontend
+        allow_origins=["*"],
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["*"],  # Allows all standard HTTP methods (GET, POST, PUT, DELETE, etc.)
+        allow_headers=["*"],  # Allows all headers in the request
     )
-
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello World"}
-
-
-@app.get("/api/db-version")
-def get_db_version(db: Session = Depends(get_db)):
-    """
-    Tests the database connection by retrieving the PostgreSQL version.
-    """
-    try:
-        result = db.execute(text("SELECT version()")).scalar()
-        return {"db_version": result}
-    except Exception as e:
-        return {"error": f"Database connection failed: {e}"}
