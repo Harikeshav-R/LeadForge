@@ -28,7 +28,7 @@ class PageScraped(Base):
     # --- Relationships ---
 
     # Many-to-One: Links this scraped page back to its parent State.
-    state = relationship("StateModel", back_populates="pages_scraped")
+    state = relationship("State", back_populates="pages_scraped")
 
     # One-to-One: Each scraped page has exactly one set of headings.
     headings = relationship(
