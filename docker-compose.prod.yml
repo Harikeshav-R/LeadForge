@@ -53,6 +53,18 @@ services:
       db:
         condition: service_healthy
 
+  deployer:
+    container_name: deployer_prod
+    build:
+      context: ./deployer
+      target: prod # Use the 'prod' stage from the builder Dockerfile
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     container_name: frontend_prod
