@@ -275,7 +275,7 @@ class WebsiteScraper:
 
 
 @tool(args_schema=InformationScraperInput)
-def information_scraper(url: str, limit: int = 10) -> InformationScraperOutput:
+def information_scraper(url: str, limit: int = 5) -> InformationScraperOutput:
     """
     Initializes and runs a new WebsiteScraper instance.
 

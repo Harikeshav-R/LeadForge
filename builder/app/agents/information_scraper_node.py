@@ -4,7 +4,7 @@ from app.schemas import State, InformationScraperInput, InformationScraperOutput
 from app.tools import information_scraper
 
 
-def information_extractor_node(state: State) -> State:
+def information_scraper_node(state: State) -> State:
     """
     Extracts content from a target website using an information scraper.
 

@@ -9,7 +9,7 @@ from app.schemas.page_screenshotter import PageScreenshotData
 
 class StateBase(BaseModel):
     initial_website_url: str = Field(..., description="The URL of the initial website to scrape and recreate.")
-    initial_website_scrape_limit: int = Field(10, description="Maximum links of the website to scrape.")
+    initial_website_scrape_limit: int = Field(5, description="Maximum links of the website to scrape.")
     prompt: str | None = Field(None, description="The prompt to generate the website from.")
     pages_scraped: list[PageScrapedData] = Field(default_factory=list,
                                                  description="Scraped pages from the initial website.")
