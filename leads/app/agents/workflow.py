@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from app.agents.analyze_leads import analyze_leads_node
-from app.agents.lead_generator import generate_leads_node
+from app.agents.analyze_leads_node import analyze_leads_node
+from app.agents.lead_generator_node import generate_leads_node
 from app.schemas.state import State
 
 
