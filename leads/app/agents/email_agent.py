@@ -12,7 +12,7 @@ from langchain_core.tools import StructuredTool
 from typing import Optional, List
 
 # Set up your API keys
-os.environ["GOOGLE_API_KEY"] = "AIzaSyAoVyLl5tgqH0lqdy3zFfUfrQf6NARwYZI"
+os.environ["GOOGLE_API_KEY"] = "api-key"
 
 # Define the required scopes for Gmail operations
 SCOPES = [
