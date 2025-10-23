@@ -15,7 +15,7 @@ class StateBase(BaseModel):
                                                  description="Scraped pages from the initial website.")
     pages_screenshots: list[PageScreenshotData] = Field(default_factory=list,
                                                         description="Screenshotted pages from the initial website.")
-    final_website_zip: bytes | None = Field(None, description="Final production website zip file.")
+    final_website_zip: str | None = Field(None, description="Final production website zip file in base64.")
 
 
 class StateCreate(StateBase):
@@ -31,7 +31,7 @@ class StateUpdate(BaseModel):
                                                            description="Scraped pages from the initial website.")
     pages_screenshots: Optional[list[PageScreenshotData]] = Field(default_factory=list,
                                                                   description="Screenshotted pages from the initial website.")
-    final_website_zip: Optional[bytes] = Field(None, description="Final production website zip file.")
+    final_website_zip: Optional[str] = Field(None, description="Final production website zip file in base64.")
 
 
 class State(StateBase):
