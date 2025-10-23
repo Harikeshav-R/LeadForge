@@ -14,7 +14,7 @@ COPY ./.gemini /root/.gemini
 WORKDIR /builder
 
 
-FROM base AS system-deps
+FROM base AS gemini-deps
 
 # Install node and npm
 RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists
 RUN npm install -g @google/gemini-cli
 
 
-FROM system-deps AS python-deps
+FROM gemini-deps AS python-deps
 
 # Install uv.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -33,7 +33,12 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache
 
 
-FROM python-deps AS sources
+FROM python-deps AS playwright-deps
+
+# Install chromium
+RUN apt-get update && uv run playwright install --with-deps chromium
+
+FROM playwright-deps AS sources
 
 # Copy project sources
 COPY . .
