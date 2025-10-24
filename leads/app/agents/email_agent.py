@@ -1,17 +1,19 @@
 import os
 import json
-import time
-
+from typing import Optional, List
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr, ValidationError
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
-from pydantic import BaseModel, EmailStr, ValidationError
 from langchain_community.tools.gmail.create_draft import GmailCreateDraft
 from langchain_community.tools.gmail.send_message import GmailSendMessage
 from langchain_community.tools.gmail.utils import build_resource_service, get_gmail_credentials
 from langchain_core.tools import StructuredTool
-from typing import Optional, List
+from fastapi.middleware.cors import CORSMiddleware
 
-# Set up your API keys
+
+# ============= EMAIL AGENT SETUP =============
+
 os.environ["GOOGLE_API_KEY"] = "api-key"
 
 # Define the required scopes for Gmail operations
@@ -38,7 +40,7 @@ gmail_send = GmailSendMessage(api_resource=api_resource)
 # Wrap tools with proper schemas for Gemini
 def create_draft_wrapper(message: str, to: str, subject: str, cc: Optional[str] = None,
                          bcc: Optional[str] = None) -> str:
-    """Create a draft email in Gmail."""
+    """Create draft in Gmail."""
     return gmail_draft.invoke({
         "message": message,
         "to": [to] if isinstance(to, str) else to,
@@ -50,7 +52,7 @@ def create_draft_wrapper(message: str, to: str, subject: str, cc: Optional[str] 
 
 def send_message_wrapper(message: str, to: str, subject: str, cc: Optional[str] = None,
                          bcc: Optional[str] = None) -> str:
-    """Send an email via Gmail."""
+    """Send email."""
     return gmail_send.invoke({
         "message": message,
         "to": [to] if isinstance(to, str) else to,
@@ -83,8 +85,7 @@ llm = ChatGoogleGenerativeAI(
 # Create the agent
 agent_executor = create_agent(llm, tools)
 
-
-# --- 1. DEFINE DATA SCHEMAS ---
+# --- DATA SCHEMAS ---
 class Screenshot(BaseModel):
     device: str
     image: str
@@ -112,31 +113,12 @@ class Lead(BaseModel):
     state_id: str
 
 
-class LeadReport(BaseModel):
-    city: str
-    business_type: str
-    radius: int
-    min_rating: float
-    max_results: int
-    messages: List[str]
-    leads: List[Lead]
-
-
-# --- 2. YOUR AGENT FUNCTION (MODIFIED) ---
-def run_agent_step(instruction: str, existing_messages: list = [], verbose: bool = True):
+# --- AGENT FUNCTION ---
+def run_agent_step(instruction: str, existing_messages: list = [], verbose: bool = False):
     """
     Runs the agent for one step of the conversation.
-
-    Args:
-        instruction: The new user prompt for the agent.
-        existing_messages: The list of messages from previous steps (the conversation history).
-        verbose: Whether to print the agent's process.
-
-    Returns:
-        A list of all messages in the new conversation state.
     """
     try:
-        # Pass the full history to the agent so it has context
         events = agent_executor.stream(
             {"messages": existing_messages + [("user", instruction)]},
             stream_mode="values",
@@ -145,51 +127,213 @@ def run_agent_step(instruction: str, existing_messages: list = [], verbose: bool
         all_messages = []
         for event in events:
             if verbose:
-                # We'll turn this off for the draft step to keep the console clean
                 event["messages"][-1].pretty_print()
-            all_messages = event["messages"]  # Get the full list of messages
+            all_messages = event["messages"]
 
-        return all_messages  # Return the complete history
+        return all_messages
 
     except Exception as e:
         print(f"Error during agent execution: {str(e)}")
-        return existing_messages  # Return old history on error
+        return existing_messages
 
 
-# --- 3. YOUR NEW MAIN EXECUTION BLOCK (WITH CONFIRMATION) ---
-if __name__ == "__main__":
+# ============= FASTAPI SETUP =============
 
-    input_file = "lead_report.json"
+app = FastAPI(title="Lead Email Agent API", version="1.0.0")
 
-    # 2. Define the GOAL of your email campaign.
-    MY_GOAL = "to sell them my new AI-powered website optimization and SEO service."
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # during dev, allow all; later restrict to your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# API Request Models
+class DraftEmailRequest(BaseModel):
+    lead: Lead
+    goal: str = "to sell them my new AI-powered website optimization and SEO service."
+    max_words: int = 150
+
+
+class SendEmailRequest(BaseModel):
+    lead: Lead
+    goal: str = "to sell them my new AI-powered website optimization and SEO service."
+    max_words: int = 150
+
+
+class BatchDraftRequest(BaseModel):
+    leads: List[Lead]
+    goal: str = "to sell them my new AI-powered website optimization and SEO service."
+    max_words: int = 150
+
+
+# API Endpoints
+@app.get("/")
+def root():
+    """Root endpoint with API info"""
+    return {
+        "message": "Lead Email Agent API is running",
+        "endpoints": {
+            "/draft-email": "POST - Draft an email for a single lead",
+            "/send-email": "POST - Draft and send email to a single lead",
+            "/batch-draft": "POST - Draft emails for multiple leads",
+            "/health": "GET - Health check",
+            "/docs": "API documentation"
+        }
+    }
+
+
+@app.post("/draft-email")
+def draft_email_for_lead(request: DraftEmailRequest):
+    """
+    Draft a personalized email for a single lead.
+
+    Returns the draft content for review.
+    """
     try:
-        # 1. Open and read the JSON file
-        with open(input_file, 'r') as f:
-            data_dict = json.load(f)
+        lead = request.lead
 
-        # 2. VALIDATE the entire report
-        report = LeadReport(**data_dict)
-        print(f"--- Successfully validated {input_file}. Found {len(report.leads)} leads. ---")
+        # Check for email
+        if not lead.emails:
+            raise HTTPException(status_code=400, detail=f"No emails found for {lead.name}")
 
-        if not report.leads:
-            print("No leads found in the report. Exiting.")
+        contact_email = lead.emails[0]
 
-        # 3. Loop through each lead
-        for i, lead in enumerate(report.leads, 1):
-            print(f"\n" + "=" * 70)
-            print(f"Processing Lead {i}/{len(report.leads)}: {lead.name}")
-            print("=" * 70)
+        # Build intelligence context
+        lead_context = f"""
+        - Company Name: {lead.name}
+        - Website: {lead.website}
+        - Category: {lead.category}
+        - Key Website Review Finding: "{lead.website_review}"
+        """
 
-            # 4. Check for an email
+        # Create draft instruction
+        draft_instruction = f"""
+        You are an expert B2B sales strategist.
+
+        **Your Task:**
+        Draft a hyper-personalized, professional, and respectful email.
+
+        **CRITICAL:** Do NOT send it. Just return the draft.
+
+        **Recipient:** {lead.name}
+        **Your Primary Goal:** {request.goal}
+        **Full Intelligence Report on this lead:**
+        {lead_context}
+
+        **Drafting Instructions:**
+        1. Draft a short, compelling email (under {request.max_words} words).
+        2. Use the "Key Website Review Finding" as the *reason* for your outreach. This is the hook.
+        3. Clearly state your goal, but frame it as a benefit to *them*.
+        4. The tone must be professional and helpful.
+
+        Respond *only* with the full text of the email draft.
+        """
+
+        # Generate draft
+        message_history = run_agent_step(draft_instruction, [], verbose=False)
+        draft_content = message_history[-1].content
+
+        return {
+            "success": True,
+            "lead_name": lead.name,
+            "contact_email": contact_email,
+            "draft": draft_content
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/send-email")
+def send_email_to_lead(request: SendEmailRequest):
+    """
+    Draft and immediately send an email to a single lead.
+
+    Use with caution - this will actually send the email!
+    """
+    try:
+        lead = request.lead
+
+        # Check for email
+        if not lead.emails:
+            raise HTTPException(status_code=400, detail=f"No emails found for {lead.name}")
+
+        contact_email = lead.emails[0]
+
+        # Build intelligence context
+        lead_context = f"""
+        - Company Name: {lead.name}
+        - Website: {lead.website}
+        - Category: {lead.category}
+        - Key Website Review Finding: "{lead.website_review}"
+        """
+
+        # Create draft instruction
+        draft_instruction = f"""
+        You are an expert B2B sales strategist.
+
+        **Your Task:**
+        Draft a hyper-personalized, professional, and respectful email.
+
+        **Recipient:** {lead.name}
+        **Your Primary Goal:** {request.goal}
+        **Full Intelligence Report on this lead:**
+        {lead_context}
+
+        **Drafting Instructions:**
+        1. Draft a short, compelling email (under {request.max_words} words).
+        2. Use the "Key Website Review Finding" as the *reason* for your outreach.
+        3. Clearly state your goal, but frame it as a benefit to *them*.
+        4. The tone must be professional and helpful.
+
+        Respond *only* with the full text of the email draft.
+        """
+
+        # Step 1: Generate draft
+        message_history = run_agent_step(draft_instruction, [], verbose=False)
+        draft_content = message_history[-1].content
+
+        # Step 2: Send the email
+        send_instruction = f"That draft is perfect. Please send it to {contact_email} now."
+        final_history = run_agent_step(send_instruction, message_history, verbose=False)
+
+        return {
+            "success": True,
+            "lead_name": lead.name,
+            "contact_email": contact_email,
+            "draft": draft_content,
+            "sent": True
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/batch-draft")
+def batch_draft_emails(request: BatchDraftRequest):
+    """
+    Draft emails for multiple leads at once.
+
+    Returns a list of drafts for review.
+    """
+    try:
+        results = []
+
+        for lead in request.leads:
+            # Skip if no emails
             if not lead.emails:
-                print(f"SKIPPING '{lead.name}': No emails found.")
+                results.append({
+                    "lead_name": lead.name,
+                    "skipped": True,
+                    "reason": "No emails found"
+                })
                 continue
 
             contact_email = lead.emails[0]
 
-            # 5. Build the "Intelligence Context"
+            # Build context
             lead_context = f"""
             - Company Name: {lead.name}
             - Website: {lead.website}
@@ -197,73 +341,60 @@ if __name__ == "__main__":
             - Key Website Review Finding: "{lead.website_review}"
             """
 
-            # 6. Create the "DRAFT-ONLY" prompt
+            # Draft instruction
             draft_instruction = f"""
             You are an expert B2B sales strategist.
 
-            **Your Task:**
-            Draft a hyper-personalized, professional, and respectful email.
-
-            **CRITICAL:** Do NOT send it. Just return the draft.
-            Wait for my approval before you do anything else.
+            **Your Task:** Draft a hyper-personalized, professional email.
 
             **Recipient:** {lead.name}
-            **Your Primary Goal:** {MY_GOAL}
-            **Full Intelligence Report on this lead:**
-            {lead_context}
+            **Your Goal:** {request.goal}
+            **Intelligence:** {lead_context}
 
-            **Drafting Instructions:**
-            1.  Draft a short, compelling email (under 150 words).
-            2.  Use the "Key Website Review Finding" as the *reason* for your outreach. This is the hook.
-            3.  Clearly state your goal, but frame it as a benefit to *them*.
-            4.  The tone must be professional and helpful.
-
-            Respond *only* with the full text of the email draft.
+            Draft a short email (under {request.max_words} words) using the website review as your hook.
+            Respond only with the email text.
             """
 
-            # 7. --- STEP 1: GET THE DRAFT ---
-            print("🤖 Generating draft...")
-            # Start with an empty history []
-            # 'verbose=False' keeps the console clean for this step
-            message_history = run_agent_step(draft_instruction, [], verbose=False)
+            # Generate draft
+            try:
+                message_history = run_agent_step(draft_instruction, [], verbose=False)
+                draft_content = message_history[-1].content
 
-            # The draft is the last message from the AI
-            draft_message = message_history[-1]
-            draft_content = draft_message.content
+                results.append({
+                    "lead_name": lead.name,
+                    "contact_email": contact_email,
+                    "draft": draft_content,
+                    "skipped": False
+                })
+            except Exception as e:
+                results.append({
+                    "lead_name": lead.name,
+                    "skipped": True,
+                    "reason": str(e)
+                })
 
-            # 8. --- STEP 2: SHOW DRAFT TO USER FOR CONFIRMATION ---
-            print("\n" + "--- DRAFT FOR YOUR REVIEW ---".center(70, "-"))
-            print(draft_content)
-            print("-" * 70)
+        return {
+            "success": True,
+            "total_leads": len(request.leads),
+            "drafts_generated": len([r for r in results if not r.get("skipped")]),
+            "results": results
+        }
 
-            user_input = input("Approve this draft? (yes/y to send, no/n to skip): ").strip().lower()
-
-            # 9. --- STEP 3: SEND THE EMAIL (OR SKIP) ---
-            if user_input in ['yes', 'y']:
-                print("\n--- 👍 Approving... Sending email... ---")
-
-                # The prompt to send the email it just drafted
-                send_instruction = f"That draft is perfect. Please send it to {contact_email} now."
-
-                # Pass in the *entire previous history* so the agent has context
-                # 'verbose=True' lets us see the agent's "send_email" tool call
-                final_message_history = run_agent_step(send_instruction, message_history, verbose=True)
-
-                print(f"--- ✅ Email sent to {lead.name} ---")
-
-            else:
-                print(f"--- 🚫 Skipping draft for {lead.name} ---")
-
-            # Add a small pause to let you read the output
-            time.sleep(2)
-
-    except FileNotFoundError:
-        print(f"Error: The input file '{input_file}' was not found.")
-    except json.JSONDecodeError:
-        print(f"Error: Could not decode JSON from '{input_file}'. Please check the file's formatting.")
-    except ValidationError as e:
-        print(f"--- ERROR: JSON DATA IS INVALID ---")
-        print(f"Could not process '{input_file}' because the data is incomplete or badly formatted.\n")
-        print(e)
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/health")
+def health_check():
+    """Check if API is running"""
+    return {"status": "healthy", "gmail_connected": True}
+
+
+# Run the server http://127.0.0.1:8000/docs
+if __name__ == "__main__":
+    import uvicorn
+
+    print("Starting Lead Email Agent API...")
+    print("API will be available at: http://localhost:8000")
+    print("Docs available at: http://localhost:8000/docs")
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
