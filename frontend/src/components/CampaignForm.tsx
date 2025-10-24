@@ -80,7 +80,7 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
             onChange={(e) => setDebugMode(e.target.checked)}
             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
           />
-          <Bug className="w-5 h-5 text-orange-500" />
+          <Bug className="w-5 h-5 text-gray-500" />
           <span className="text-sm font-medium text-gray-700">
             Debug Mode (Use Fake Data)
           </span>
@@ -110,8 +110,9 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
         {/* Submit Button */}
         <Button 
           type="submit" 
+          size="lg"
           disabled={isLoading || !searchQuery.trim()}
-          className="w-full flex items-center justify-center gap-2 py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg"
+          className="w-full"
         >
           {isLoading ? (
             <>
@@ -163,7 +164,7 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
             )}
             
             {debugMode && (
-              <div className="text-xs text-orange-600 max-w-md mx-auto">
+              <div className="text-xs text-gray-600 max-w-md mx-auto">
                 <p className="mb-2">Debug mode active - using fake data for UI development</p>
               </div>
             )}

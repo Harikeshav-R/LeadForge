@@ -7,7 +7,7 @@ export function Navigation() {
         <div className="flex justify-center items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 bg-primary-600 rounded-lg">
+            <div className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-lg">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-semibold text-gray-900">LeadForge</span>
