@@ -2,6 +2,6 @@
 .idea/
 
 # Environment files
-.env
+.env.dev
 .env.dev
 .env.prod
