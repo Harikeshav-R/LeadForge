@@ -710,6 +710,9 @@ export class EmailApiService {
         throw new Error('At least one recipient email is required');
       }
 
+      // Use the first email as the primary recipient (backend uses lead.emails[0])
+      const primaryRecipient = toEmails[0];
+
       // Create a temporary lead object with the edited email
       // Use only the first email for the lead object (backend expects emails[0])
       const tempLead: Lead = {
@@ -717,7 +720,7 @@ export class EmailApiService {
         id: 'temp-' + Date.now(),
         state_id: 'temp-state',
         name: 'Custom Email',
-        emails: toEmails, // Array of individual email strings
+        emails: [primaryRecipient], // Single email string as required by backend
         phone_numbers: [],
         social_media: [],
         screenshots: [],
@@ -733,6 +736,7 @@ export class EmailApiService {
       // Create a custom goal that includes the exact content the user wants to send
       const customGoal = `Send an email with the following exact content:
       
+TO: ${primaryRecipient}
 Subject: ${emailContent.subject}
 
 ${emailContent.body}
@@ -740,7 +744,7 @@ ${emailContent.body}
 ${emailContent.cc ? `CC: ${emailContent.cc}` : ''}
 ${emailContent.bcc ? `BCC: ${emailContent.bcc}` : ''}
 
-IMPORTANT: Use this exact subject and body. Do not modify or regenerate the content.`;
+IMPORTANT: Send this email to ${primaryRecipient}. Use this exact subject and body. Do not modify or regenerate the content.`;
 
       // Use the existing send-email endpoint with the custom goal
       const sendRequest: EmailSendRequest = {

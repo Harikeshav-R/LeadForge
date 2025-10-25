@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
 import { ExternalLink, Mail, Phone, Building2, Globe, Loader2, CheckCircle, RefreshCw, X, Send, Eye, AlertCircle } from 'lucide-react';
-import { BuilderApiService, EmailApiService } from '../services/api';
+import { BuilderApiService, DeployerApiService, EmailApiService } from '../services/api';
 import type { Lead, EmailContent } from '../types';
 import { EMAIL_CONFIG } from '../config/email';
 
@@ -230,8 +230,9 @@ interface LeadActionState {
     loading: boolean;
     success: boolean;
     error: string | null;
+    websiteZip?: string;
     deployedUrl?: string;
-    stage?: 'building' | 'deploying';
+    stage?: 'building' | 'built' | 'deploying' | 'deployed';
   };
 }
 
@@ -357,7 +358,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     }
   };
 
-  // Handle website build and deployment
+  // Handle website build (step 1: build only)
   const handleBuildWebsite = async (lead: Lead) => {
     const leadId = lead.id;
     
@@ -368,6 +369,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
         success: false,
         error: null,
         stage: 'building',
+        websiteZip: undefined,
       },
     });
 
@@ -376,27 +378,22 @@ export function LeadsTable({ leads }: LeadsTableProps) {
       const websiteUrl = lead.website || `https://example.com`;
       const businessName = lead.name;
 
-      // Update stage to building
-      updateLeadState(leadId, {
-        websiteBuild: {
-          loading: true,
-          success: false,
-          error: null,
-          stage: 'building',
-        },
-      });
+      console.log(`🏗️ Building website for ${businessName} from URL: ${websiteUrl}`);
 
-      // Build and deploy the website in one operation
-      const deployedSite = await BuilderApiService.buildAndDeployWebsite(websiteUrl, businessName);
+      // Build the website (without deploying)
+      const websiteZip = await BuilderApiService.buildWebsite(websiteUrl, businessName);
 
       updateLeadState(leadId, {
         websiteBuild: {
           loading: false,
           success: true,
           error: null,
-          deployedUrl: deployedSite.deployedUrl,
+          websiteZip: websiteZip,
+          stage: 'built',
         },
       });
+
+      console.log(`✅ Website built successfully for ${businessName}`);
 
     } catch (error) {
       updateLeadState(leadId, {
@@ -404,6 +401,68 @@ export function LeadsTable({ leads }: LeadsTableProps) {
           loading: false,
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error occurred',
+          stage: undefined,
+        },
+      });
+    }
+  };
+
+  // Handle website deployment (step 2: deploy the built website)
+  const handleDeployWebsite = async (lead: Lead) => {
+    const leadId = lead.id;
+    const currentState = leadStates[leadId];
+    
+    // Check if we have a built website to deploy
+    if (!currentState?.websiteBuild.websiteZip) {
+      updateLeadState(leadId, {
+        websiteBuild: {
+          ...currentState?.websiteBuild,
+          error: 'No website built yet. Please build the website first.',
+        },
+      });
+      return;
+    }
+
+    // Start deployment
+    updateLeadState(leadId, {
+      websiteBuild: {
+        ...currentState?.websiteBuild,
+        loading: true,
+        error: null,
+        stage: 'deploying',
+      },
+    });
+
+    try {
+      const businessName = lead.name;
+      const websiteZip = currentState.websiteBuild.websiteZip;
+
+      console.log(`🚀 Deploying website for ${businessName}`);
+
+      // Deploy the website
+      const deployedSite = await DeployerApiService.deployWebsite(businessName, websiteZip);
+
+      updateLeadState(leadId, {
+        websiteBuild: {
+          loading: false,
+          success: true,
+          error: null,
+          websiteZip: websiteZip,
+          deployedUrl: deployedSite.url,
+          stage: 'deployed',
+        },
+      });
+
+      console.log(`✅ Website deployed successfully for ${businessName} at ${deployedSite.url}`);
+
+    } catch (error) {
+      updateLeadState(leadId, {
+        websiteBuild: {
+          ...currentState?.websiteBuild,
+          loading: false,
+          success: true, // Build was successful, only deploy failed
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+          stage: 'built', // Revert to 'built' stage so user can retry deploy
         },
       });
     }
@@ -610,7 +669,16 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   };
 
   const handleRetryWebsiteBuild = (lead: Lead) => {
-    handleBuildWebsite(lead);
+    const leadId = lead.id;
+    const currentState = leadStates[leadId];
+    
+    // If we have a built website, retry deployment
+    // Otherwise, retry building
+    if (currentState?.websiteBuild.websiteZip && currentState?.websiteBuild.stage === 'built') {
+      handleDeployWebsite(lead);
+    } else {
+      handleBuildWebsite(lead);
+    }
   };
 
   if (leads.length === 0) {
@@ -632,8 +700,8 @@ export function LeadsTable({ leads }: LeadsTableProps) {
         <p className="text-base text-gray-600 mt-2">{leads.length} businesses found</p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto -mx-8">
+        <table className="w-full min-w-[1200px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -835,7 +903,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 
                           {/* Email Preview Dropdown */}
                           {leadState?.emailDraft.showPreview && leadState?.emailDraft.draftContent && (
-                            <div className="mt-2 border border-gray-200 rounded-lg bg-white shadow-lg w-full max-w-4xl">
+                            <div className="mt-2 border border-gray-200 rounded-lg bg-white shadow-lg w-full max-w-6xl">
                               {/* Preview Header */}
                               <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                                 <h4 className="text-lg font-semibold text-gray-900">Email Preview</h4>
@@ -1044,46 +1112,91 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                         </div>
                       )}
                       
-                      {/* Build Website Button */}
+                      {/* Build/Deploy Website Buttons */}
                       <div className="flex flex-col gap-2">
-                        {!leadState?.websiteBuild.success ? (
-                          <Button
-                            variant="tertiary"
-                            size="sm"
-                            onClick={() => handleBuildWebsite(lead)}
-                            disabled={leadState?.websiteBuild.loading}
-                          >
-                            {leadState?.websiteBuild.loading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                {leadState.websiteBuild.stage === 'building' ? 'Building...' : 'Deploying...'}
-                              </>
-                            ) : (
-                              <>
-                                <Globe className="w-4 h-4" />
-                                Build Website
-                              </>
-                            )}
-                          </Button>
-                        ) : (
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
-                              <CheckCircle className="w-4 h-4" />
-                              Website Deployed
-                            </div>
-                            {leadState.websiteBuild.deployedUrl && (
+                        {(() => {
+                          const buildState = leadState?.websiteBuild;
+                          const stage = buildState?.stage;
+                          
+                          // Not built yet - show Build button
+                          if (!buildState?.success && !buildState?.websiteZip) {
+                            return (
                               <Button
-                                variant="secondary"
+                                variant="tertiary"
                                 size="sm"
-                                onClick={() => window.open(leadState.websiteBuild.deployedUrl, '_blank')}
+                                onClick={() => handleBuildWebsite(lead)}
+                                disabled={buildState?.loading}
                               >
-                                <ExternalLink className="w-3 h-3" />
-                                View Site
-                      </Button>
-                    )}
-                          </div>
-                        )}
+                                {buildState?.loading && stage === 'building' ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Building...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Globe className="w-4 h-4" />
+                                    Build Website
+                                  </>
+                                )}
+                              </Button>
+                            );
+                          }
+                          
+                          // Built but not deployed - show Deploy button
+                          if (buildState?.success && buildState?.websiteZip && stage === 'built' && !buildState?.deployedUrl) {
+                            return (
+                              <>
+                                <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-50 px-3 py-2 rounded-lg">
+                                  <CheckCircle className="w-4 h-4" />
+                                  Website Built
+                                </div>
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleDeployWebsite(lead)}
+                                  disabled={buildState?.loading}
+                                >
+                                  {buildState?.loading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Deploying...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Globe className="w-4 h-4" />
+                                      Deploy Website
+                                    </>
+                                  )}
+                                </Button>
+                              </>
+                            );
+                          }
+                          
+                          // Deployed - show success status and View Site button
+                          if (buildState?.deployedUrl && stage === 'deployed') {
+                            return (
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                                  <CheckCircle className="w-4 h-4" />
+                                  Website Deployed
+                                </div>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => window.open(buildState.deployedUrl, '_blank')}
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  View Site
+                                </Button>
+                              </div>
+                            );
+                          }
+                          
+                          // Fallback
+                          return null;
+                        })()}
                         
+                        {/* Error Display */}
                         {leadState?.websiteBuild.error && (
                           <div className="flex flex-col gap-2">
                             <div className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded max-w-xs">

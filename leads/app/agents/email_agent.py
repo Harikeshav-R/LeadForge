@@ -459,4 +459,7 @@ if __name__ == "__main__":
     print("Starting Lead Email Agent API...")
     print("API will be available at: http://localhost:8000")
     print("Docs available at: http://localhost:8000/docs")
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)
+    # uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+
+    ## rahul runs with this
+    uvicorn.run(app, host="0.0.0.0", port=8000)

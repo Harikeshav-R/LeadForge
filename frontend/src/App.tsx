@@ -59,7 +59,7 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-0">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-0">
         {/* Search Section - Always Visible */}
         <section className="mb-20 min-h-screen flex flex-col justify-center">
           <div className="text-center mb-12">
@@ -78,7 +78,7 @@ function App() {
 
         {/* Dashboard Section - Always visible */}
         <section id="dashboard-section" className="bg-white border-t border-gray-200 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
             {campaignData.isActive ? (
               /* Dashboard with Results */
               <div className="space-y-12 fade-in-up">
