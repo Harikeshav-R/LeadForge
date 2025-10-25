@@ -1,7 +1,8 @@
 import uuid
+from typing import Optional
 
 from sqlalchemy import Column, String, Uuid, Text, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 
 from app.core import Base
 
@@ -34,6 +35,14 @@ class State(Base):
     # Relationship to access the Mail object from a State instance
     # 'back_populates' links this to the 'state' attribute defined in Mail
     email_contents = relationship("Mail", back_populates="state")
+
+    # Back-populates from Workflow (a State can be an initial or final state)
+    workflow_as_initial: Mapped[Optional["Workflow"]] = relationship(
+        back_populates="initial_state", foreign_keys="[Workflow.initial_state_id]"
+    )
+    workflow_as_final: Mapped[Optional["Workflow"]] = relationship(
+        back_populates="final_state", foreign_keys="[Workflow.final_state_id]"
+    )
 
     def __repr__(self):
         return f"<State(id={self.id!r}, client_name={self.client_name!r})>"
