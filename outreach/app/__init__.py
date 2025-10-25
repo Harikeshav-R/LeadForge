@@ -1,18 +1,38 @@
-from fastapi import FastAPI
+import os
+
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app.core import Config, Base, engine, get_db
-
-Base.metadata.create_all(bind=engine)
+from app.core.database import get_db
 
 app = FastAPI()
-# app.include_router(api_router)
 
-if Config.DEBUG:
+if os.getenv("DEBUG") == "true":
+    # CORS Middleware for development
+    # This allows the frontend (running on localhost:5173) to communicate with the backend.
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=["http://localhost:5173"],  # Allows the dev frontend
         allow_credentials=True,
-        allow_methods=["*"],  # Allows all standard HTTP methods (GET, POST, PUT, DELETE, etc.)
-        allow_headers=["*"],  # Allows all headers in the request
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+
+
+@app.get("/api/db-version")
+def get_db_version(db: Session = Depends(get_db)):
+    """
+    Tests the database connection by retrieving the PostgreSQL version.
+    """
+    try:
+        result = db.execute(text("SELECT version()")).scalar()
+        return {"db_version": result}
+    except Exception as e:
+        return {"error": f"Database connection failed: {e}"}
