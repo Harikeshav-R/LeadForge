@@ -20,6 +20,7 @@ class StateBase(BaseModel):
     web_agency_logo: str = Field(..., description="The URL of the web agency logo.")
 
     email_contents: MailInput | None = Field(None, description="The email contents to send.")
+    email_sent: bool = Field(False, description="Whether the email has been sent.")
 
 
 class StateCreate(StateBase):
@@ -36,6 +37,7 @@ class StateUpdate(BaseModel):
     demo_url: str | None = Field(None,
                                  description="The link to the new, modern prototype website our agency has built for them.")
     email_contents: MailInput | None = Field(None, description="The email contents to send.")
+    email_sent: bool | None = Field(None, description="Whether the email has been sent.")
 
 
 class State(StateBase):
