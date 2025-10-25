@@ -15,3 +15,6 @@ class Config:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     MODEL_NAME: str = os.getenv("MODEL_NAME")
     MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER")
+
+    SENDER_EMAIL_ADDRESS: str = os.getenv("SENDER_EMAIL_ADDRESS")
+    SENDER_EMAIL_PASSWORD: str = os.getenv("SENDER_EMAIL_PASSWORD")

@@ -3,6 +3,11 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/backend.iml" filepath="$PROJECT_DIR$/.idea/backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../builder/.idea/builder.iml" filepath="$PROJECT_DIR$/../builder/.idea/builder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../deployer/.idea/deployer.iml" filepath="$PROJECT_DIR$/../deployer/.idea/deployer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../frontend/.idea/frontend.iml" filepath="$PROJECT_DIR$/../frontend/.idea/frontend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../leads/.idea/leads.iml" filepath="$PROJECT_DIR$/../leads/.idea/leads.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../outreach/.idea/outreach.iml" filepath="$PROJECT_DIR$/../outreach/.idea/outreach.iml" />
     </modules>
   </component>
 </project>
