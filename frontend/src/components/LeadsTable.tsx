@@ -1,3 +1,5 @@
+// UI Refactor: Updated to use shadcn/ui components (Card, Button, Input, Label, Badge, Dialog, Separator)
+// Maintains all existing functionality while improving UI consistency and accessibility
 import { useState } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
@@ -683,10 +685,11 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 
   if (leads.length === 0) {
     return (
-      <Card className="text-center py-16">
-        <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-3">No leads yet</h3>
-        <p className="text-lg text-gray-600">
+      <Card className="text-center py-20 px-8">
+        {/* Added more generous padding for empty state */}
+        <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-8" />
+        <h3 className="text-xl font-semibold text-foreground mb-4">No leads yet</h3>
+        <p className="text-lg text-muted-foreground max-w-md mx-auto">
           Start a campaign to discover potential customers
         </p>
       </Card>
@@ -695,71 +698,74 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="px-8 py-6 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-2xl font-semibold text-gray-900">Discovered Leads</h2>
-        <p className="text-base text-gray-600 mt-2">{leads.length} businesses found</p>
+      <div className="px-8 py-8 border-b border-border bg-muted/30">
+        {/* Added more padding and consistent design tokens */}
+        <h2 className="text-2xl font-semibold text-foreground">Discovered Leads</h2>
+        <p className="text-base text-muted-foreground mt-3">{leads.length} businesses found</p>
       </div>
 
       <div className="overflow-x-auto -mx-8">
         <table className="w-full min-w-[1200px]">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-muted/50 border-b border-border">
             <tr>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              <th className="px-12 py-6 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
                 Business
               </th>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              <th className="px-12 py-6 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
                 Contact
               </th>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              <th className="px-8 py-6 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-background divide-y divide-border">
             {leads.map((lead) => {
               const leadState = leadStates[lead.id];
               
               return (
-              <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-8 py-6">
-                  <div className="flex flex-col">
-                    <div className="text-base font-semibold text-gray-900 mb-1">
+              <tr key={lead.id} className="hover:bg-muted/50 transition-colors">
+                <td className="px-12 py-8">
+                  {/* Added more vertical padding for better row spacing */}
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-base font-semibold text-foreground">
                       {lead.name}
                     </div>
-                    <div className="text-sm text-gray-500 mb-1">{lead.address}</div>
+                    <div className="text-sm text-muted-foreground">{lead.address}</div>
                     {lead.category && (
-                      <div className="text-xs text-gray-400">{lead.category}</div>
+                      <div className="text-xs text-muted-foreground">{lead.category}</div>
                     )}
                     {lead.rating && (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         ⭐ {lead.rating.toFixed(1)} ({lead.total_ratings} reviews)
                       </div>
                     )}
                   </div>
                 </td>
-                <td className="px-8 py-6">
-                  <div className="flex flex-col gap-2">
+                <td className="px-8 py-8">
+                  <div className="flex flex-col gap-3">
+                    {/* Added more spacing between contact items */}
                     {lead.phone_number && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <Phone className="w-4 h-4" />
                         {lead.phone_number}
                       </div>
                     )}
                     {lead.emails.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <Mail className="w-4 h-4" />
                         {lead.emails[0]}
                       </div>
                     )}
                     {lead.phone_numbers.length > 0 && lead.phone_numbers[0] !== lead.phone_number && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <Phone className="w-4 h-4" />
                         {lead.phone_numbers[0]}
                       </div>
                     )}
                   </div>
                 </td>
-                <td className="px-8 py-6">
+                <td className="px-8 py-8">
                     <div className="flex flex-col gap-3">
                       {/* Draft Email Section */}
                       {lead.emails.length > 0 && (
