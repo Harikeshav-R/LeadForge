@@ -1,0 +1,117 @@
+# Development Environment Configuration
+# Uses volumes to mount local code for hot-reloading.
+services:
+  db:
+    image: postgres:alpine
+    container_name: db_dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data/
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    ports:
+      - "5432:5432" # Expose PostgreSQL port for local debugging if needed
+    env_file:
+      - .env.dev
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: backend_dev
+    build:
+      context: ./backend
+      target: dev # Use the 'dev' stage from the backend Dockerfile
+    volumes:
+      - ./backend:/backend # Mount local 'backend' folder into the container
+      - /backend/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  leads:
+    container_name: leads_dev
+    build:
+      context: ./leads
+      target: dev # Use the 'dev' stage from the leads Dockerfile
+    volumes:
+      - ./leads:/leads # Mount local 'leads' folder into the container
+      - /leads/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  builder:
+    container_name: builder_dev
+    build:
+      context: ./builder
+      target: dev # Use the 'dev' stage from the builder Dockerfile
+    volumes:
+      - ./builder:/builder # Mount local 'builder' folder into the container
+      - /builder/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  deployer:
+    container_name: deployer_dev
+    build:
+      context: ./deployer
+      target: dev # Use the 'dev' stage from the deployer Dockerfile
+    volumes:
+      - ./deployer:/deployer # Mount local 'deployer' folder into the container
+      - /deployer/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  outreach:
+    container_name: outreach_dev
+    build:
+      context: ./outreach
+      target: dev # Use the 'dev' stage from the outreach Dockerfile
+    volumes:
+      - ./outreach:/outreach # Mount local 'outreach' folder into the container
+      - /outreach/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend_dev
+    build:
+      context: ./frontend
+      target: dev # Use the 'dev' stage from the frontend Dockerfile
+    volumes:
+      - ./frontend:/frontend # Mount local 'frontend' folder
+      - /frontend/node_modules # Don't mount local node_modules, use the one in the container
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env.dev
+    depends_on:
+      - backend
+
+volumes:
+  postgres_dev_data:
+

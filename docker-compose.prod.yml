@@ -1,0 +1,96 @@
+# Production Environment Configuration
+services:
+  db:
+    image: postgres:alpine
+    container_name: db_prod
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data/
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    env_file:
+      - .env.prod
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: backend_prod
+    build:
+      context: ./backend
+      target: prod # Use the 'prod' stage from the backend Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  leads:
+    container_name: leads_prod
+    build:
+      context: ./leads
+      target: prod # Use the 'prod' stage from the leads Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  builder:
+    container_name: builder_prod
+    build:
+      context: ./builder
+      target: prod # Use the 'prod' stage from the builder Dockerfile
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  deployer:
+    container_name: deployer_prod
+    build:
+      context: ./deployer
+      target: prod # Use the 'prod' stage from the deployer Dockerfile
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  outreach:
+    container_name: outreach_prod
+    build:
+      context: ./outreach
+      target: prod # Use the 'prod' stage from the outreach Dockerfile
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    container_name: frontend_prod
+    build:
+      context: ./frontend
+      target: prod # Use the 'prod' stage from the frontend Dockerfile
+    ports:
+      - "80:80" # Expose Nginx port
+    env_file:
+      - .env.prod
+    depends_on:
+      - backend
+
+volumes:
+  postgres_prod_data:
+
