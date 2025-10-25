@@ -26,14 +26,14 @@ def create_state(db: Session, state_data: schemas.StateCreate) -> models.State:
     return db_state
 
 
-def get_state(db: Session, state_id: uuid.UUID) -> models.State | None:
+def read_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     """
     Retrieve a single State record by its ID.
     """
     return db.query(models.State).filter(models.State.id == state_id).first()
 
 
-def get_states(db: Session, skip: int = 0, limit: int = 100) -> list[models.State]:
+def read_all_states(db: Session, skip: int = 0, limit: int = 100) -> list[models.State]:
     """
     Retrieve a list of State records with pagination.
     """
@@ -47,7 +47,7 @@ def update_state(db: Session, state_id: uuid.UUID, update_data: schemas.StateUpd
     """
     update_data = update_data.model_dump()
 
-    db_state = get_state(db, state_id)
+    db_state = read_state(db, state_id)
 
     if not db_state:
         return None
@@ -79,7 +79,7 @@ def delete_state(db: Session, state_id: uuid.UUID) -> models.State | None:
     """
     Delete a State record and its associated Mail record.
     """
-    db_state = get_state(db, state_id)
+    db_state = read_state(db, state_id)
     if db_state:
         if db_state.email_contents:
             # Delete the associated mail first

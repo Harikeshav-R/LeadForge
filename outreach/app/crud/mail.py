@@ -17,7 +17,7 @@ def read_mail(db: Session, mail_id: uuid.UUID) -> models.Mail | None:
     return db.query(models.Mail).filter(models.Mail.id == mail_id).first()
 
 
-def read_mails(db: Session, skip: int = 0, limit: int = 100) -> list[models.Mail]:
+def read_all_mails(db: Session, skip: int = 0, limit: int = 100) -> list[models.Mail]:
     return db.query(models.Mail).offset(skip).limit(limit).all()
 
 
