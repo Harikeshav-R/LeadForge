@@ -14,21 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # ============= EMAIL AGENT SETUP =============
 
-# Load environment variables from .env.dev file in the HackOHIO root directory
-from dotenv import load_dotenv
-import pathlib
-
-# Load from the .env.dev file in the HackOHIO root directory
-env_path = pathlib.Path(__file__).parent.parent.parent.parent / ".env.dev"
-load_dotenv(env_path)
-
-# Get GEMINI_API_KEY from environment variable (this is the Google API key for Gemini)
-GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GOOGLE_API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable is required. Please set it in your .env.dev file.")
-
-# Set the environment variable for the Gemini model
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+os.environ["GOOGLE_API_KEY"] = "api-key"
 
 # Define the required scopes for Gmail operations
 SCOPES = [
@@ -37,16 +23,10 @@ SCOPES = [
 ]
 
 # Get credentials with the correct scopes
-# Use absolute paths to avoid path issues
-import os
-current_dir = os.path.dirname(os.path.abspath(__file__))
-token_path = os.path.join(current_dir, "token.json")
-credentials_path = os.path.join(current_dir, "credentials.json")
-
 credentials = get_gmail_credentials(
-    token_file=token_path,
+    token_file="token.json",
     scopes=SCOPES,
-    client_secrets_file=credentials_path,
+    client_secrets_file="credentials.json",
 )
 
 # Build the Gmail API service
@@ -214,14 +194,11 @@ def draft_email_for_lead(request: DraftEmailRequest):
     try:
         lead = request.lead
 
-        # Check for email with safe array access
-        if not lead.emails or len(lead.emails) == 0:
+        # Check for email
+        if not lead.emails:
             raise HTTPException(status_code=400, detail=f"No emails found for {lead.name}")
-        
-        # Safe array access with validation
-        contact_email = lead.emails[0] if len(lead.emails) > 0 else None
-        if not contact_email or not isinstance(contact_email, str) or not contact_email.strip():
-            raise HTTPException(status_code=400, detail=f"Invalid email address for {lead.name}")
+
+        contact_email = lead.emails[0]
 
         # Build intelligence context
         lead_context = f"""
@@ -256,15 +233,7 @@ def draft_email_for_lead(request: DraftEmailRequest):
 
         # Generate draft
         message_history = run_agent_step(draft_instruction, [], verbose=False)
-        
-        # Safe access to message history
-        if not message_history or len(message_history) == 0:
-            raise HTTPException(status_code=500, detail="Agent failed to generate draft content")
-        
-        draft_content = message_history[-1].content if len(message_history) > 0 else ""
-        
-        if not draft_content:
-            raise HTTPException(status_code=500, detail="Agent returned empty draft content")
+        draft_content = message_history[-1].content
 
         return {
             "success": True,
@@ -287,14 +256,11 @@ def send_email_to_lead(request: SendEmailRequest):
     try:
         lead = request.lead
 
-        # Check for email with safe array access
-        if not lead.emails or len(lead.emails) == 0:
+        # Check for email
+        if not lead.emails:
             raise HTTPException(status_code=400, detail=f"No emails found for {lead.name}")
-        
-        # Safe array access with validation
-        contact_email = lead.emails[0] if len(lead.emails) > 0 else None
-        if not contact_email or not isinstance(contact_email, str) or not contact_email.strip():
-            raise HTTPException(status_code=400, detail=f"Invalid email address for {lead.name}")
+
+        contact_email = lead.emails[0]
 
         # Build intelligence context
         lead_context = f"""
@@ -327,15 +293,7 @@ def send_email_to_lead(request: SendEmailRequest):
 
         # Step 1: Generate draft
         message_history = run_agent_step(draft_instruction, [], verbose=False)
-        
-        # Safe access to message history
-        if not message_history or len(message_history) == 0:
-            raise HTTPException(status_code=500, detail="Agent failed to generate draft content")
-        
-        draft_content = message_history[-1].content if len(message_history) > 0 else ""
-        
-        if not draft_content:
-            raise HTTPException(status_code=500, detail="Agent returned empty draft content")
+        draft_content = message_history[-1].content
 
         # Step 2: Send the email
         send_instruction = f"That draft is perfect. Please send it to {contact_email} now."
@@ -400,27 +358,7 @@ def batch_draft_emails(request: BatchDraftRequest):
             # Generate draft
             try:
                 message_history = run_agent_step(draft_instruction, [], verbose=False)
-                
-                # Safe access to message history
-                if not message_history or len(message_history) == 0:
-                    results.append({
-                        "lead_name": lead.name,
-                        "contact_email": lead.emails[0] if lead.emails else "",
-                        "success": False,
-                        "error": "Agent failed to generate draft"
-                    })
-                    continue
-                
-                draft_content = message_history[-1].content if len(message_history) > 0 else ""
-                
-                if not draft_content:
-                    results.append({
-                        "lead_name": lead.name,
-                        "contact_email": lead.emails[0] if lead.emails else "",
-                        "success": False,
-                        "error": "Agent returned empty content"
-                    })
-                    continue
+                draft_content = message_history[-1].content
 
                 results.append({
                     "lead_name": lead.name,
@@ -459,7 +397,4 @@ if __name__ == "__main__":
     print("Starting Lead Email Agent API...")
     print("API will be available at: http://localhost:8000")
     print("Docs available at: http://localhost:8000/docs")
-    # uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
-
-    ## rahul runs with this
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
