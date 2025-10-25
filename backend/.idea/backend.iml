@@ -4,7 +4,12 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="uv (backend)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (backend) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="builder" />
+    <orderEntry type="module" module-name="deployer" />
+    <orderEntry type="module" module-name="frontend" />
+    <orderEntry type="module" module-name="leads" />
+    <orderEntry type="module" module-name="outreach" />
   </component>
 </module>
