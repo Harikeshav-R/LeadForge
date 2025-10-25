@@ -60,18 +60,17 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navigation />
       
-      <main className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12">
+      <main className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Search Section - Always Visible */}
         <section className="mb-24 min-h-screen flex flex-col justify-center">
-          {/* Added more breathing room with increased margin bottom and padding */}
           <div className="text-center mb-16 px-4">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl font-bold text-foreground mb-4 tracking-tight">
               Lead Generation Pipeline
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-6">
               Find and analyze potential business leads with AI-powered insights
             </p>
           </div>
@@ -82,18 +81,18 @@ function App() {
         </section>
 
         {/* Dashboard Section - Always visible */}
-        <section id="dashboard-section" className="bg-card border-t border-border shadow-lg">
-          <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-16">
+        <section id="dashboard-section" className="bg-card border-t border-border rounded-xl">
+          <div className="py-16">
             {/* Added more generous padding for better breathing room */}
             {campaignData.isActive ? (
               /* Dashboard with Results */
               <div className="space-y-16 fade-in-up">
                 {/* Results Header */}
                 <div className="text-center px-4">
-                  <h2 className="text-3xl font-semibold text-foreground mb-4">
+                  <h2 className="text-3xl font-semibold text-foreground mb-4 tracking-tight">
                     Search Results
                   </h2>
-                  <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                  <p className="text-sm text-muted-foreground max-w-3xl mx-auto leading-6">
                     Found <Badge variant="secondary" className="mx-1">{campaignData.leads.length}</Badge> businesses for: "{campaignData.searchQuery}"
                   </p>
                 </div>
@@ -136,20 +135,20 @@ function App() {
               <div className="space-y-16">
                 {/* Dashboard Header */}
                 <div className="text-center px-4">
-                  <h2 className="text-3xl font-semibold text-foreground mb-4">
+                  <h2 className="text-3xl font-semibold text-foreground mb-4 tracking-tight">
                     Dashboard
                   </h2>
-                  <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-6">
                     Your search results will appear here
                   </p>
                 </div>
 
                 {/* Results Preview */}
                 <div className="px-4">
-                  <h3 className="text-2xl font-semibold text-foreground mb-8">
+                  <h3 className="text-2xl font-semibold text-foreground mb-8 tracking-tight">
                     Business Results
                   </h3>
-                  <div className="bg-muted rounded-lg p-12 border-2 border-dashed border-border">
+                  <div className="bg-muted/50 rounded-xl p-12 border border-dashed border-border">
                     {/* Added more padding inside preview cards for better visual balance */}
                     <div className="text-center">
                       <svg className="w-16 h-16 text-muted-foreground mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,10 +162,10 @@ function App() {
 
                 {/* Additional Preview Sections for More Scrollable Content */}
                 <div className="px-4">
-                  <h3 className="text-2xl font-semibold text-foreground mb-8">
+                  <h3 className="text-2xl font-semibold text-foreground mb-8 tracking-tight">
                     Contact Information
                   </h3>
-                  <div className="bg-muted rounded-lg p-12 border-2 border-dashed border-border">
+                  <div className="bg-muted/50 rounded-xl p-12 border border-dashed border-border">
                     {/* Consistent spacing and design tokens throughout */}
                     <div className="text-center">
                       <svg className="w-16 h-16 text-muted-foreground mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,10 +178,10 @@ function App() {
                 </div>
 
                 <div className="px-4">
-                  <h3 className="text-2xl font-semibold text-foreground mb-8">
+                  <h3 className="text-2xl font-semibold text-foreground mb-8 tracking-tight">
                     Business Insights
                   </h3>
-                  <div className="bg-muted rounded-lg p-12 border-2 border-dashed border-border">
+                  <div className="bg-muted/50 rounded-xl p-12 border border-dashed border-border">
                     <div className="text-center">
                       <svg className="w-16 h-16 text-muted-foreground mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

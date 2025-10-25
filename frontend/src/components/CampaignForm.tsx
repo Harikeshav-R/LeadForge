@@ -64,8 +64,7 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
   };
 
   return (
-    <Card className="max-w-3xl w-full p-8">
-      {/* Added generous padding inside card for better breathing room */}
+    <Card className="max-w-3xl w-full p-8 glass">
       {/* Header Section */}
       <div className="text-center mb-12">
         <h2 className="text-3xl font-semibold text-foreground mb-4">

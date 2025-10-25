@@ -1,4 +1,4 @@
-// UI Refactor: Updated to use shadcn/ui components (Card, Button, Input, Label, Badge, Dialog, Separator)
+// UI Refactor: Updated to use shadcn/ui components (Card, Button, Input, Label, Badge, Dialog, Separator, Table)
 // Maintains all existing functionality while improving UI consistency and accessibility
 import { useState } from 'react';
 import { Card } from './Card';
@@ -7,6 +7,15 @@ import { ExternalLink, Mail, Phone, Building2, Globe, Loader2, CheckCircle, Refr
 import { BuilderApiService, DeployerApiService, EmailApiService } from '../services/api';
 import type { Lead, EmailContent } from '../types';
 import { EMAIL_CONFIG } from '../config/email';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './ui/table';
+import { ScrollArea } from './ui/scroll-area';
 
 // Normalize email agent response to structured format
 const normalizeEmailResponse = (rawResponse: any, fallbackEmail: string): EmailContent => {
@@ -946,75 +955,66 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="px-8 py-8 border-b border-border bg-muted/30">
-        {/* Added more padding and consistent design tokens */}
-        <h2 className="text-2xl font-semibold text-foreground">Discovered Leads</h2>
-        <p className="text-base text-muted-foreground mt-3">{leads.length} businesses found</p>
+    <Card className="overflow-hidden p-0 border border-border">
+      <div className="px-8 py-6 border-b border-border">
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight">Discovered Leads</h2>
+        <p className="text-sm text-muted-foreground mt-2">{leads.length} businesses found</p>
       </div>
 
-      <div className="overflow-x-auto -mx-8">
-        <table className="w-full min-w-[1200px]">
-          <thead className="bg-muted/50 border-b border-border">
-            <tr>
-              <th className="px-12 py-6 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
-                Business
-              </th>
-              <th className="px-12 py-6 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
-                Contact
-              </th>
-              <th className="px-8 py-6 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-background divide-y divide-border">
+      <ScrollArea className="w-full">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[300px]">Business</TableHead>
+              <TableHead className="w-[200px]">Contact</TableHead>
+              <TableHead className="w-[400px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {leads.map((lead) => {
               const leadState = leadStates[lead.id];
               
               return (
-              <tr key={lead.id} className="hover:bg-muted/50 transition-colors">
-                <td className="px-12 py-8">
-                  {/* Added more vertical padding for better row spacing */}
+              <TableRow key={lead.id} className="hover:bg-muted/30 transition-colors">
+                <TableCell className="py-6">
                   <div className="flex flex-col space-y-2">
-                    <div className="text-base font-semibold text-foreground">
+                    <div className="text-sm font-semibold text-foreground leading-6">
                       {lead.name}
                     </div>
-                    <div className="text-sm text-muted-foreground">{lead.address}</div>
+                    <div className="text-xs text-muted-foreground leading-5">{lead.address}</div>
                     {lead.category && (
-                      <div className="text-xs text-muted-foreground">{lead.category}</div>
+                      <div className="text-xs text-muted-foreground leading-5">{lead.category}</div>
                     )}
                     {lead.rating && (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs text-muted-foreground leading-5">
                         ⭐ {lead.rating.toFixed(1)} ({lead.total_ratings} reviews)
                       </div>
                     )}
                   </div>
-                </td>
-                <td className="px-8 py-8">
-                  <div className="flex flex-col gap-3">
-                    {/* Added more spacing between contact items */}
+                </TableCell>
+                <TableCell className="py-6">
+                  <div className="flex flex-col gap-2">
                     {lead.phone_number && (
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <Phone className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
+                        <Phone className="w-3.5 h-3.5" />
                         {lead.phone_number}
                       </div>
                     )}
                     {lead.emails.length > 0 && (
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <Mail className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
+                        <Mail className="w-3.5 h-3.5" />
                         {lead.emails[0]}
                       </div>
                     )}
                     {lead.phone_numbers.length > 0 && lead.phone_numbers[0] !== lead.phone_number && (
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <Phone className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
+                        <Phone className="w-3.5 h-3.5" />
                         {lead.phone_numbers[0]}
                       </div>
                     )}
                   </div>
-                </td>
-                <td className="px-8 py-8">
+                </TableCell>
+                <TableCell className="py-6">
                     <div className="flex flex-col gap-3">
                       {/* Draft Email Section */}
                       {lead.emails.length > 0 && (
@@ -1527,13 +1527,13 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                       </div>
                     )}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
               );
             })}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </Card>
   );
 }
