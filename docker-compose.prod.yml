@@ -57,9 +57,22 @@ services:
     container_name: deployer_prod
     build:
       context: ./deployer
-      target: prod # Use the 'prod' stage from the builder Dockerfile
+      target: prod # Use the 'prod' stage from the deployer Dockerfile
     ports:
       - "8003:8003"
+    env_file:
+      - .env.prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+  outreach:
+    container_name: outreach_prod
+    build:
+      context: ./outreach
+      target: prod # Use the 'prod' stage from the outreach Dockerfile
+    ports:
+      - "8004:8004"
     env_file:
       - .env.prod
     depends_on:

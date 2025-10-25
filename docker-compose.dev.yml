@@ -71,7 +71,7 @@ services:
       context: ./deployer
       target: dev # Use the 'dev' stage from the deployer Dockerfile
     volumes:
-      - ./deployer:/deployer # Mount local 'backend' folder into the container
+      - ./deployer:/deployer # Mount local 'deployer' folder into the container
       - /deployer/.venv # Don't mount local .venv, use the one in the container
     ports:
       - "8003:8003"
@@ -81,7 +81,21 @@ services:
       db:
         condition: service_healthy
 
-
+  outreach:
+    container_name: outreach_dev
+    build:
+      context: ./outreach
+      target: dev # Use the 'dev' stage from the outreach Dockerfile
+    volumes:
+      - ./outreach:/outreach # Mount local 'outreach' folder into the container
+      - /outreach/.venv # Don't mount local .venv, use the one in the container
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env.dev
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     container_name: frontend_dev
