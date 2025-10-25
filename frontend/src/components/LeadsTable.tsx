@@ -670,16 +670,265 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     handleCreateEmailDraft(lead);
   };
 
-  const handleRetryWebsiteBuild = (lead: Lead) => {
+  const handleRetryWebsiteBuild = async (lead: Lead) => {
+    const leadId = lead.id;
+    
+    // Reset the website build state and clear any previous errors
+    updateLeadState(leadId, {
+      websiteBuild: {
+        loading: false,
+        success: false,
+        error: null,
+        websiteZip: undefined,
+        deployedUrl: undefined,
+        stage: undefined,
+      },
+    });
+
+    // Retry the build
+    await handleBuildWebsite(lead);
+  };
+
+  // Handle website preview
+  const handlePreviewWebsite = async (lead: Lead) => {
     const leadId = lead.id;
     const currentState = leadStates[leadId];
     
-    // If we have a built website, retry deployment
-    // Otherwise, retry building
-    if (currentState?.websiteBuild.websiteZip && currentState?.websiteBuild.stage === 'built') {
-      handleDeployWebsite(lead);
-    } else {
-      handleBuildWebsite(lead);
+    if (!currentState?.websiteBuild.websiteZip) {
+      console.error('No website zip available for preview');
+      return;
+    }
+
+    // Show loading state
+    updateLeadState(leadId, {
+      websiteBuild: {
+        ...currentState?.websiteBuild,
+        loading: true,
+        error: null,
+      },
+    });
+
+    try {
+      // Convert base64 to blob
+      const zipBase64 = currentState.websiteBuild.websiteZip;
+      const binaryString = atob(zipBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/zip' });
+      
+      // Create a temporary URL for the zip file
+      const zipUrl = URL.createObjectURL(blob);
+      
+      // Try to extract and preview HTML directly
+      try {
+        // Use JSZip to extract the HTML files
+        const JSZip = (await import('jszip')).default;
+        const zip = await JSZip.loadAsync(blob);
+        
+        // Debug: Log all files in the zip
+        const allFiles = Object.keys(zip.files);
+        console.log(`📦 Zip contains ${allFiles.length} files:`, allFiles);
+        
+        // Find the main HTML file (usually index.html)
+        let htmlFile = zip.file('index.html');
+        if (!htmlFile) {
+          // Look for any HTML file
+          const htmlFiles = Object.keys(zip.files).filter(name => name.endsWith('.html'));
+          console.log(`🔍 Found HTML files:`, htmlFiles);
+          if (htmlFiles.length > 0) {
+            htmlFile = zip.file(htmlFiles[0]);
+          }
+        }
+        
+        if (htmlFile) {
+          // Extract the HTML content
+          let htmlContent = await htmlFile.async('text');
+          console.log(`📄 HTML content preview (first 500 chars):`, htmlContent.substring(0, 500));
+          
+          // Try to extract and inline CSS and JS files
+          const cssFiles = Object.keys(zip.files).filter(name => name.endsWith('.css'));
+          const jsFiles = Object.keys(zip.files).filter(name => name.endsWith('.js'));
+          console.log(`🎨 Found CSS files:`, cssFiles);
+          console.log(`⚡ Found JS files:`, jsFiles);
+          
+          // Extract CSS content
+          let inlineCSS = '';
+          for (const cssFile of cssFiles) {
+            try {
+              const cssContent = await zip.file(cssFile)?.async('text');
+              if (cssContent) {
+                inlineCSS += `\n/* ${cssFile} */\n${cssContent}\n`;
+              }
+            } catch (e) {
+              console.warn(`Failed to extract CSS file ${cssFile}:`, e);
+            }
+          }
+          
+          // Extract JS content
+          let inlineJS = '';
+          for (const jsFile of jsFiles) {
+            try {
+              const jsContent = await zip.file(jsFile)?.async('text');
+              if (jsContent) {
+                inlineJS += `\n/* ${jsFile} */\n${jsContent}\n`;
+              }
+            } catch (e) {
+              console.warn(`Failed to extract JS file ${jsFile}:`, e);
+            }
+          }
+          
+          // Create a complete HTML document with inlined assets
+          const completeHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${lead.name} - Website Preview</title>
+    <style>
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+        
+        /* Inlined CSS from the website */
+        ${inlineCSS}
+    </style>
+</head>
+<body>
+    ${htmlContent.replace(/<html[^>]*>|<\/html>|<head[^>]*>.*?<\/head>|<body[^>]*>|<\/body>/gi, '')}
+    
+    <script>
+        // Inlined JS from the website
+        ${inlineJS}
+    </script>
+</body>
+</html>`;
+          
+          // Create a new window with the complete HTML content
+          const previewWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+          if (previewWindow) {
+            previewWindow.document.write(completeHTML);
+            previewWindow.document.close();
+            previewWindow.document.title = `${lead.name} - Website Preview`;
+            console.log(`👀 Opened website preview for ${lead.name} with inlined assets`);
+          } else {
+            throw new Error('Popup blocked - please allow popups for this site');
+          }
+        } else {
+          throw new Error('No HTML file found in the zip');
+        }
+      } catch (extractError) {
+        console.warn('Failed to extract HTML, trying fallback preview:', extractError);
+        
+        // Fallback: Create a simple HTML viewer with the zip content
+        try {
+          const fallbackHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${lead.name} - Website Preview (Fallback)</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; padding: 20px; background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 1200px; margin: 0 auto; background: white; 
+            padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .header { 
+            border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; 
+        }
+        .download-btn { 
+            background: #007bff; color: white; padding: 10px 20px; 
+            border: none; border-radius: 5px; cursor: pointer; 
+            text-decoration: none; display: inline-block; margin: 10px 0; 
+        }
+        .download-btn:hover { background: #0056b3; }
+        .info { 
+            background: #e7f3ff; padding: 15px; border-radius: 5px; 
+            border-left: 4px solid #007bff; margin: 20px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ ${lead.name} - Website Preview</h1>
+            <p>Website has been built successfully! Download the zip file to view the complete website.</p>
+        </div>
+        
+        <div class="info">
+            <h3>📦 What's in the zip file?</h3>
+            <p>The zip file contains the complete website with HTML, CSS, JavaScript, and all assets. 
+            Extract it to a folder and open the index.html file in your browser to see the full website.</p>
+        </div>
+        
+        <a href="${zipUrl}" download="${lead.name.replace(/[^a-zA-Z0-9]/g, '_')}_website.zip" class="download-btn">
+            📥 Download Website Zip
+        </a>
+        
+        <div class="info">
+            <h3>🔧 How to view the website:</h3>
+            <ol>
+                <li>Click the download button above</li>
+                <li>Extract the zip file to a folder</li>
+                <li>Open the index.html file in your web browser</li>
+                <li>Or deploy it using the "Deploy Website" button in the main interface</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>`;
+          
+          const previewWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+          if (previewWindow) {
+            previewWindow.document.write(fallbackHTML);
+            previewWindow.document.close();
+            previewWindow.document.title = `${lead.name} - Website Preview (Fallback)`;
+            console.log(`👀 Opened fallback preview for ${lead.name}`);
+          } else {
+            throw new Error('Popup blocked - please allow popups for this site');
+          }
+        } catch (fallbackError) {
+          console.error('Fallback preview also failed, downloading zip:', fallbackError);
+          
+          // Final fallback: download the zip file
+          const link = document.createElement('a');
+          link.href = zipUrl;
+          link.download = `${lead.name.replace(/[^a-zA-Z0-9]/g, '_')}_website.zip`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log(`📦 Downloaded website zip for ${lead.name} (all preview methods failed)`);
+        }
+      }
+      
+      // Clean up the URL
+      setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+      
+      // Clear loading state
+      updateLeadState(leadId, {
+        websiteBuild: {
+          ...currentState?.websiteBuild,
+          loading: false,
+        },
+      });
+      
+    } catch (error) {
+      console.error('Failed to preview website:', error);
+      updateLeadState(leadId, {
+        websiteBuild: {
+          ...currentState?.websiteBuild,
+          loading: false,
+          error: 'Failed to preview website. Please try downloading the zip file.',
+        },
+      });
     }
   };
 
@@ -1148,7 +1397,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                             );
                           }
                           
-                          // Built but not deployed - show Deploy button
+                          // Built but not deployed - show Preview and Deploy buttons
                           if (buildState?.success && buildState?.websiteZip && stage === 'built' && !buildState?.deployedUrl) {
                             return (
                               <>
@@ -1156,24 +1405,46 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                   <CheckCircle className="w-4 h-4" />
                                   Website Built
                                 </div>
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleDeployWebsite(lead)}
-                                  disabled={buildState?.loading}
-                                >
-                                  {buildState?.loading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                      Deploying...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Globe className="w-4 h-4" />
-                                      Deploy Website
-                                    </>
-                                  )}
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handlePreviewWebsite(lead)}
+                                    disabled={buildState?.loading}
+                                    className="w-full"
+                                  >
+                                    {buildState?.loading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Extracting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Eye className="w-4 h-4" />
+                                        Preview Website
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => handleDeployWebsite(lead)}
+                                    disabled={buildState?.loading}
+                                    className="w-full"
+                                  >
+                                    {buildState?.loading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Deploying...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Globe className="w-4 h-4" />
+                                        Deploy Website
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
                               </>
                             );
                           }

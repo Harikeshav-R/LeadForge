@@ -361,7 +361,7 @@ export class BuilderApiService {
           'Accept': 'application/json',
         },
         body: JSON.stringify(buildRequest),
-        signal: AbortSignal.timeout(180000) // 3 minute timeout for building
+        // No timeout - allow long-running AI agent processes to complete
       });
 
       // Handle errors
