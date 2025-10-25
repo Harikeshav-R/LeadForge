@@ -1,53 +1,42 @@
-// Email Configuration for Testing
-// Update these values with your actual email credentials
-
+// Email Agent API Configuration
 export const EMAIL_CONFIG = {
-  // Your Gmail email address (sender)
-  SENDER_EMAIL: 'rahulksanghvi21@gmail.com', // Replace with your actual email
+  // Email Agent API URL (standalone service on port 8000)
+  EMAIL_AGENT_API_URL: 'http://localhost:8000',
   
-  // Test receiver email address (for testing purposes)
-  TEST_RECEIVER_EMAIL: 'hackohi00@gmail.com', // Replace with test email
+  // Your Gmail email address (for display purposes)
+  SENDER_EMAIL: 'rahulksanghvi21@gmail.com',
   
-  // Enable/disable test mode (true = use test receiver, false = use actual lead emails)
-  USE_TEST_MODE: true, // Set to false for production
-  
-  // Gmail API Configuration (for future use with real Gmail API)
-  GMAIL_CLIENT_ID: 'your-gmail-client-id',
-  GMAIL_CLIENT_SECRET: 'your-gmail-client-secret',
+  // Default email settings
+  DEFAULT_GOAL: 'to sell them my new AI-powered website optimization and SEO service',
+  DEFAULT_MAX_WORDS: 150,
 };
 
-// Instructions for setting up email credentials:
+// Instructions for using the Gmail Email Agent:
 
 /*
-🚨 CURRENT STATUS: The system is using LOGGING MODE for testing
-   - Emails are logged to console with full details
-   - No actual emails are sent yet
-   - This is safe for testing and development
+📧 GMAIL EMAIL AGENT INTEGRATION
 
-📧 TO ENABLE REAL EMAIL SENDING:
+The system now uses the real Gmail Email Agent API running on port 8000.
 
-Option 1: Use the existing Gmail Agent (Recommended)
-1. Set up Gmail API credentials:
-   - Go to Google Cloud Console
-   - Create a new project or select existing one
-   - Enable Gmail API
-   - Create OAuth2 credentials
-   - Download credentials.json
-   - Place it in HackOHIO/leads/app/agents/ directory
+🚀 TO START THE EMAIL AGENT:
+1. Navigate to: cd HackOHIO/leads/app/agents/
+2. Run: python email_agent.py
+3. The agent will start on http://localhost:8000
 
-2. Update the email agent configuration:
-   - Update the Google API key in HackOHIO/leads/app/agents/email_agent.py
-   - Run the email agent to set up OAuth2 tokens
+📋 FEATURES:
+- AI-powered personalized email generation using Gemini
+- Real Gmail draft creation via Gmail API
+- Real email sending via Gmail
+- Customizable email goals/pitch
+- Lead intelligence integration (website reviews, business info)
 
-3. Create an API endpoint to call the email agent from the frontend
+🔧 REQUIREMENTS:
+- Gmail OAuth credentials are already set up (token.json, credentials.json)
+- Google API key is configured in email_agent.py
+- Email agent service must be running on port 8000
 
-Option 2: Use a simple SMTP service (Quick setup)
-1. Use services like SendGrid, Mailgun, or Gmail SMTP
-2. Update the emailService.ts to use real SMTP sending
-3. Add SMTP credentials to this config file
-
-🔧 FOR NOW: The system will log detailed email information to the console
-   - Check browser console to see email details
-   - All email content is logged for verification
-   - Safe for testing without sending real emails
+⚠️ IMPORTANT:
+- Drafts will be created in your actual Gmail drafts folder
+- Sent emails will be sent from your Gmail account
+- Test carefully before sending to real leads
 */

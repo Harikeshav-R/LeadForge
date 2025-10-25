@@ -6,11 +6,14 @@ import type {
   BuilderWorkflowResponse,
   DeployerRequest,
   DeployerResponse,
+  EmailDraftRequest,
   EmailDraftResponse,
-  BuildAndDeployResponse
+  EmailSendRequest,
+  EmailSendResponse,
+  BuildAndDeployResponse,
+  EmailContent
 } from '../types';
 import { EMAIL_CONFIG } from '../config/email';
-import { SimpleEmailService } from './emailService';
 
 const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_LEADS_API_URL || 'http://localhost:8001',
@@ -511,22 +514,37 @@ export class DeployerApiService {
 }
 
 /**
- * API service for email draft creation
+ * API service for Gmail Email Agent integration
  */
 export class EmailApiService {
-  // Use configuration from config file
-  private static readonly TEST_CONFIG = EMAIL_CONFIG;
-  private static emailService = new SimpleEmailService({
-    senderEmail: EMAIL_CONFIG.SENDER_EMAIL,
-    testReceiverEmail: EMAIL_CONFIG.TEST_RECEIVER_EMAIL,
-    useTestMode: EMAIL_CONFIG.USE_TEST_MODE
-  });
+  /**
+   * Test if the email agent API service is reachable
+   */
+  static async testConnection(): Promise<boolean> {
+    try {
+      console.log('🔗 Testing email agent connection to:', `${EMAIL_CONFIG.EMAIL_AGENT_API_URL}/health`);
+      
+      const response = await fetch(`${EMAIL_CONFIG.EMAIL_AGENT_API_URL}/health`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000) // 10 second timeout for health check
+      });
+      
+      console.log('🔗 Email agent connection test response:', response.status, response.statusText);
+      return response.ok;
+    } catch (error) {
+      console.error('❌ Email agent API connection test failed:', error);
+      return false;
+    }
+  }
 
   /**
-   * Create a Gmail draft for a specific lead
+   * Create a Gmail draft for a specific lead using the email agent
    */
-  static async createEmailDraft(lead: Lead, goal?: string): Promise<EmailDraftResponse> {
-    console.log('📧 Creating email draft for:', lead.name);
+  static async createEmailDraft(lead: Lead, goal: string, maxWords: number = EMAIL_CONFIG.DEFAULT_MAX_WORDS): Promise<EmailDraftResponse> {
+    console.log('📧 Creating Gmail draft for:', lead.name, 'with goal:', goal);
 
     try {
       if (!lead.emails || lead.emails.length === 0) {
@@ -535,105 +553,250 @@ export class EmailApiService {
 
       const startTime = Date.now();
 
-      console.log('📤 Creating email draft for:', lead.name, 'with goal:', goal || 'default sales goal');
-
-      // For now, we'll simulate the email draft creation since the email agent
-      // is a standalone script. In a real implementation, this would call
-      // a proper API endpoint that wraps the email agent functionality.
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Generate a realistic email draft based on lead information
-      const subject = `Partnership Opportunity - ${lead.name}`;
-      const body = `Hi there,
-
-I hope this email finds you well. I came across ${lead.name} and was impressed by your ${lead.category || 'business'} ${lead.website ? `and website (${lead.website})` : ''}.
-
-${lead.website_review ? `I noticed that ${lead.website_review.toLowerCase()}` : 'I believe there are some great opportunities to enhance your online presence.'}
-
-I'd love to discuss how our AI-powered website optimization and SEO services could help ${lead.name} attract more customers and grow your business. We specialize in:
-
-• Modern website design and development
-• Search engine optimization (SEO)
-• Performance optimization
-• Mobile-responsive design
-
-Would you be interested in a brief 15-minute call to explore how we could help ${lead.name} reach more customers online?
-
-Best regards,
-Your Sales Team
-
-P.S. I'd be happy to provide a free website analysis to show you specific opportunities for improvement.`;
-
-      // Determine recipient email (use test email in test mode)
-      const recipientEmail = this.TEST_CONFIG.USE_TEST_MODE 
-        ? this.TEST_CONFIG.TEST_RECEIVER_EMAIL 
-        : lead.emails[0];
-
-      // Mock successful response with draft content
-      const draftResponse: EmailDraftResponse = {
-        success: true,
-        draft_id: `draft_${Date.now()}_${lead.id}`,
-        message: `Email draft created successfully for ${lead.name}`,
-        draft_content: {
-          subject,
-          body,
-          to: recipientEmail,
-        },
+      // Prepare the draft request
+      const draftRequest: EmailDraftRequest = {
+        lead,
+        goal,
+        max_words: maxWords,
       };
+
+      console.log('📤 Sending draft request to email agent for:', lead.name);
+
+      // Make the API call to email agent
+      const response = await fetch(`${EMAIL_CONFIG.EMAIL_AGENT_API_URL}/draft-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(draftRequest),
+        signal: AbortSignal.timeout(60000) // 1 minute timeout for AI generation
+      });
+
+      // Handle errors
+      if (!response.ok) {
+        const errorMessage = await ApiErrorHandler.parseError(response);
+        throw new Error(errorMessage);
+      }
+
+      // Parse successful response
+      const draftResponse: EmailDraftResponse = await response.json();
+      console.log('✅ Gmail draft created:', draftResponse);
 
       const endTime = Date.now();
       const duration = (endTime - startTime) / 1000;
-      console.log(`✅ Email draft created in ${duration}s for: ${lead.name}`);
+      console.log(`🎯 Gmail draft created in ${duration}s for: ${lead.name}`);
 
       return draftResponse;
 
     } catch (error) {
-      console.error('❌ Email draft creation failed:', error);
+      console.error('❌ Gmail draft creation failed:', error);
       
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      };
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Email draft creation timeout - The AI is taking longer than expected. Please try again.');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
+          throw new Error('Cannot connect to the email agent service. Please ensure:\n1. The email agent is running on port 8000\n2. Run: cd HackOHIO/leads/app/agents && python email_agent.py\n3. Gmail OAuth credentials are set up');
+        }
+      }
+      
+      throw error;
     }
   }
 
   /**
-   * Send an email using the simple email service
+   * Send an email using the email agent (drafts and sends in one call)
    */
-  static async sendEmail(draftId: string, lead: Lead): Promise<{ success: boolean; message?: string; error?: string }> {
-    console.log('📧 Sending email for:', lead.name, 'draft ID:', draftId);
+  static async sendEmail(lead: Lead, goal: string, maxWords: number = EMAIL_CONFIG.DEFAULT_MAX_WORDS): Promise<EmailSendResponse> {
+    console.log('📧 Sending email via Gmail for:', lead.name, 'with goal:', goal);
 
     try {
-      // Create email content
-      const emailContent = this.emailService.createEmailContent(lead);
-      
-      // Send the email
-      const result = await this.emailService.sendTestEmail(emailContent);
-
-      if (result.success) {
-        console.log(`✅ Email sent successfully from ${emailContent.from} to ${emailContent.to}`);
-        console.log(`📧 Test Mode: ${this.TEST_CONFIG.USE_TEST_MODE ? 'Enabled' : 'Disabled'}`);
-        
-        return {
-          success: true,
-          message: result.message,
-        };
-      } else {
-        return {
-          success: false,
-          error: result.message,
-        };
+      if (!lead.emails || lead.emails.length === 0) {
+        throw new Error('No email address available for this lead');
       }
+
+      const startTime = Date.now();
+
+      // Prepare the send request
+      const sendRequest: EmailSendRequest = {
+        lead,
+        goal,
+        max_words: maxWords,
+      };
+
+      console.log('📤 Sending email request to email agent for:', lead.name);
+
+      // Make the API call to email agent
+      const response = await fetch(`${EMAIL_CONFIG.EMAIL_AGENT_API_URL}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(sendRequest),
+        signal: AbortSignal.timeout(60000) // 1 minute timeout for AI generation + sending
+      });
+
+      // Handle errors
+      if (!response.ok) {
+        const errorMessage = await ApiErrorHandler.parseError(response);
+        throw new Error(errorMessage);
+      }
+
+      // Parse successful response
+      const sendResponse: EmailSendResponse = await response.json();
+      console.log('✅ Email sent via Gmail:', sendResponse);
+
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000;
+      console.log(`🎯 Email sent in ${duration}s to: ${sendResponse.contact_email}`);
+
+      return sendResponse;
 
     } catch (error) {
       console.error('❌ Email send failed:', error);
       
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred while sending email',
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Email send timeout - The operation is taking longer than expected. Please try again.');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
+          throw new Error('Cannot connect to the email agent service. Please ensure:\n1. The email agent is running on port 8000\n2. Run: cd HackOHIO/leads/app/agents && python email_agent.py\n3. Gmail OAuth credentials are set up');
+        }
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Send a custom email with user-edited content
+   * This sends the exact content provided by the user (after editing)
+   */
+  static async sendCustomEmail(emailContent: EmailContent): Promise<void> {
+    console.log('📧 Sending custom email with edited content:', {
+      to: emailContent.to,
+      subject: emailContent.subject,
+      bodyPreview: emailContent.body.substring(0, 100) + '...',
+    });
+
+    try {
+      if (!emailContent.to) {
+        throw new Error('Recipient email address is required');
+      }
+
+      if (!emailContent.subject) {
+        throw new Error('Email subject is required');
+      }
+
+      if (!emailContent.body) {
+        throw new Error('Email body is required');
+      }
+
+      const startTime = Date.now();
+
+      // Parse recipients from comma-separated strings
+      const parseEmails = (value: string): string[] => {
+        if (!value || typeof value !== 'string') return [];
+        return value
+          .split(',')
+          .map(email => email.trim())
+          .filter(email => email.length > 0);
       };
+
+      const toEmails = parseEmails(emailContent.to);
+      
+      // Ensure we have at least one valid recipient
+      if (toEmails.length === 0) {
+        throw new Error('At least one recipient email is required');
+      }
+
+      // Create a temporary lead object with the edited email
+      // Use only the first email for the lead object (backend expects emails[0])
+      const tempLead: Lead = {
+        place_id: 'temp-' + Date.now(),
+        id: 'temp-' + Date.now(),
+        state_id: 'temp-state',
+        name: 'Custom Email',
+        emails: toEmails, // Array of individual email strings
+        phone_numbers: [],
+        social_media: [],
+        screenshots: [],
+        address: '',
+        website: '',
+        rating: 0,
+        total_ratings: 0,
+        category: '',
+        lat: 0,
+        lng: 0,
+      };
+
+      // Create a custom goal that includes the exact content the user wants to send
+      const customGoal = `Send an email with the following exact content:
+      
+Subject: ${emailContent.subject}
+
+${emailContent.body}
+
+${emailContent.cc ? `CC: ${emailContent.cc}` : ''}
+${emailContent.bcc ? `BCC: ${emailContent.bcc}` : ''}
+
+IMPORTANT: Use this exact subject and body. Do not modify or regenerate the content.`;
+
+      // Use the existing send-email endpoint with the custom goal
+      const sendRequest: EmailSendRequest = {
+        lead: tempLead,
+        goal: customGoal,
+        max_words: 10000, // Large number to avoid truncation
+      };
+
+      console.log('📤 Sending custom email request to email agent');
+      console.log('📋 Request payload:', {
+        lead: {
+          name: tempLead.name,
+          emails: tempLead.emails,
+          emailCount: tempLead.emails.length
+        },
+        goalPreview: customGoal.substring(0, 200) + '...',
+        max_words: 10000
+      });
+
+      // Make the API call to email agent
+      const response = await fetch(`${EMAIL_CONFIG.EMAIL_AGENT_API_URL}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(sendRequest),
+        signal: AbortSignal.timeout(60000) // 1 minute timeout
+      });
+
+      // Handle errors
+      if (!response.ok) {
+        const errorMessage = await ApiErrorHandler.parseError(response);
+        throw new Error(errorMessage);
+      }
+
+      // Parse successful response
+      const sendResponse: EmailSendResponse = await response.json();
+      console.log('✅ Custom email sent via Gmail:', sendResponse);
+
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000;
+      console.log(`🎯 Custom email sent in ${duration}s to: ${emailContent.to}`);
+
+    } catch (error) {
+      console.error('❌ Custom email send failed:', error);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Email send timeout - The operation is taking longer than expected. Please try again.');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
+          throw new Error('Cannot connect to the email agent service. Please ensure the email agent is running on port 8000');
+        }
+      }
+      
+      throw error;
     }
   }
 }

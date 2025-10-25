@@ -107,22 +107,60 @@ export interface DeployerResponse {
   url: string;
 }
 
-// Email Agent Types
+// Email Agent Types (matching email_agent.py schema)
 export interface EmailDraftRequest {
   lead: Lead;
-  goal?: string;
+  goal: string;
+  max_words: number;
 }
 
 export interface EmailDraftResponse {
   success: boolean;
-  draft_id?: string;
-  message?: string;
-  error?: string;
-  // Draft content for preview
-  draft_content?: {
-    subject: string;
-    body: string;
-    to: string;
+  lead_name: string;
+  contact_email: string;
+  draft: string; // Full email text content
+}
+
+export interface EmailSendRequest {
+  lead: Lead;
+  goal: string;
+  max_words: number;
+}
+
+export interface EmailSendResponse {
+  success: boolean;
+  lead_name: string;
+  contact_email: string;
+  draft: string;
+  sent: boolean;
+}
+
+// Email content structure for customization
+export interface EmailContent {
+  to: string;
+  subject: string;
+  body: string;
+  cc?: string;
+  bcc?: string;
+}
+
+// Lead action state for UI management
+export interface LeadActionState {
+  emailDraft: {
+    loading: boolean;
+    success: boolean;
+    error: string | null;
+    showPreview: boolean;
+    draftContent: EmailContent;
+    originalContent?: EmailContent; // Store original AI-generated content
+    sending: boolean;
+    sent: boolean;
+  };
+  websiteBuild: {
+    loading: boolean;
+    success: boolean;
+    error: string | null;
+    deployedUrl?: string;
   };
 }
 
