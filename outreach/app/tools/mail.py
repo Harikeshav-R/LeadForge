@@ -1,9 +1,11 @@
 import smtplib
 from email.message import EmailMessage
 
+from langchain_core.tools import tool
 from loguru import logger
 
 from app.core import Config
+from app.schemas import MailInput, MailOutput
 
 
 class GmailSender:
@@ -13,29 +15,29 @@ class GmailSender:
     properly handle the connection and disconnection from the SMTP server.
 
     Attributes:
-        sender_email (str): The Gmail address to send from.
-        app_password (str): The 16-digit "App Password".
+        sender_email_address (str): The Gmail address to send from.
+        sender_email_password (str): The 16-digit "App Password".
         smtp_server (str): The SMTP server address (default "smtp.gmail.com").
         smtp_port (int): The SMTP server port (default 587).
         server (smtplib.SMTP | None): The smtplib.SMTP server instance.
     """
 
-    def __init__(self, sender_email: str, app_password: str):
+    def __init__(self, sender_email_address: str, sender_email_password: str):
         """Initializes the GmailSender.
 
         Args:
-            sender_email (str): The Gmail address to send from.
-            app_password (str): The 16-digit "App Password" generated from
+            sender_email_address (str): The Gmail address to send from.
+            sender_email_password (str): The 16-digit "App Password" generated from
                                 Google Account settings.
         """
-        if not sender_email.endswith('@gmail.com'):
+        if not sender_email_address.endswith('@gmail.com'):
             logger.warning(
                 "This class is optimized for Gmail. Using a non-Gmail "
-                "address (%s) may fail.", sender_email
+                f"address ({sender_email_address}) may fail."
             )
 
-        self.sender_email = sender_email
-        self.app_password = app_password
+        self.sender_email = sender_email_address
+        self.sender_email_password = sender_email_password
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
         self.server: smtplib.SMTP | None = None
@@ -56,28 +58,27 @@ class GmailSender:
             Exception: For non-SMTP unexpected errors.
         """
         try:
-            logger.info("Connecting to SMTP server %s:%s...",
-                        self.smtp_server, self.smtp_port)
+            logger.info(f"Connecting to SMTP server {self.smtp_server}:{self.smtp_port}...")
             self.server = smtplib.SMTP(self.smtp_server, self.smtp_port)
             self.server.starttls()  # Secure the connection
-            logger.info("Logging in as %s...", self.sender_email)
-            self.server.login(self.sender_email, self.app_password)
+            logger.info(f"Logging in as {self.sender_email}...")
+            self.server.login(self.sender_email, self.sender_email_password)
             logger.info("Successfully connected and logged in.")
             return self
         except smtplib.SMTPConnectError as e:
-            logger.error("Failed to connect to SMTP server: %s", e)
+            logger.error(f"Failed to connect to SMTP server: {e}")
             raise
         except smtplib.SMTPHeloError as e:
-            logger.error("Server refused HELO/EHLO: %s", e)
+            logger.error(f"Server refused HELO/EHLO: {e}")
             raise
         except smtplib.SMTPAuthenticationError as e:
-            logger.error("SMTP authentication failed (check email/app password): %s", e)
+            logger.error(f"SMTP authentication failed (check email/app password): {e}")
             raise
         except smtplib.SMTPException as e:
-            logger.error("An SMTP error occurred during connection: %s", e)
+            logger.error(f"An SMTP error occurred during connection: {e}")
             raise
         except Exception as e:
-            logger.error("An unexpected error occurred during connection: %s", e)
+            logger.error(f"An unexpected error occurred during connection: {e}")
             raise
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -91,15 +92,14 @@ class GmailSender:
             traceback (TracebackType | None): The traceback, if any.
         """
         if exc_type:
-            logger.error("Exiting context due to an exception: %s: %s",
-                         exc_type.__name__, exc_value)
+            logger.error(f"Exiting context due to an exception: {exc_type.__name__}: {exc_value}")
 
         if self.server:
             try:
                 self.server.quit()
                 logger.info("Disconnected from SMTP server.")
             except smtplib.SMTPException as e:
-                logger.error("Error during server.quit(): %s", e)
+                logger.error(f"Error during server.quit(): {e}")
 
     def send_email(self, recipient_email: str, subject: str, body: str,
                    html_content: str | None = None):
@@ -143,32 +143,32 @@ class GmailSender:
             logger.info("Added HTML alternative to the email.")
 
         try:
-            logger.info("Sending email to %s (Subject: %s)...",
-                        recipient_email, subject)
+            logger.info(f"Sending email to {recipient_email} (Subject: {subject})...")
             self.server.send_message(msg)
-            logger.info("Email sent successfully to %s.", recipient_email)
+            logger.info(f"Email sent successfully to {recipient_email}.")
         except smtplib.SMTPRecipientsRefused as e:
-            logger.error("Server refused recipient %s: %s", recipient_email, e)
+            logger.error(f"Server refused recipient {recipient_email}: {e}")
             raise
         except smtplib.SMTPSenderRefused as e:
-            logger.error("Server refused sender %s: %s", self.sender_email, e)
+            logger.error(f"Server refused sender {self.sender_email}: {e}")
             raise
         except smtplib.SMTPDataError as e:
-            logger.error("Server refused email data: %s", e)
+            logger.error(f"Server refused email data: {e}")
             raise
         except smtplib.SMTPException as e:
-            logger.error("Error sending email: %s", e)
+            logger.error(f"Error sending email: {e}")
             raise
         except Exception as e:
-            logger.error("An unexpected error occurred during sending: %s", e)
+            logger.error(f"An unexpected error occurred during sending: {e}")
             raise
 
 
 # --- Global Wrapper Function ---
 
-def send_gmail(sender_email: str, app_password: str, recipient_email: str,
+@tool(args_schema=MailInput)
+def send_gmail(sender_email_address: str, sender_email_password: str, recipient_email_address: str,
                subject: str, body: str,
-               html_content: str | None = None) -> bool:
+               html_content: str | None = None) -> MailOutput:
     """A global wrapper function to send a single email.
 
     This function handles the complete process:
@@ -178,9 +178,9 @@ def send_gmail(sender_email: str, app_password: str, recipient_email: str,
     4. Disconnects.
 
     Args:
-        sender_email (str): The Gmail address to send from.
-        app_password (str): The 16-digit "App Password".
-        recipient_email (str): The email address of the recipient.
+        sender_email_address (str): The Gmail address to send from.
+        sender_email_password (str): The 16-digit "App Password".
+        recipient_email_address (str): The email address of the recipient.
         subject (str): The subject line of the email.
         body (str): The plain-text content of the email.
         html_content (str | None, optional): The HTML content for the
@@ -192,14 +192,15 @@ def send_gmail(sender_email: str, app_password: str, recipient_email: str,
     logger.info("--- Using global send_gmail function ---")
     try:
         # Use the class as a context manager
-        with GmailSender(sender_email, app_password) as mailer:
-            mailer.send_email(recipient_email, subject, body, html_content)
+        with GmailSender(sender_email_address, sender_email_password) as mailer:
+            mailer.send_email(recipient_email_address, subject, body, html_content)
         logger.info("--- Global function complete ---")
-        return True
+        return MailOutput(success=True)
+
     except Exception as e:
         # The class methods already log the specific error
-        logger.error("Global function send_gmail() failed: %s", e)
-        return False
+        logger.error(f"Global function send_gmail() failed: {e}")
+        return MailOutput(success=False)
 
 
 # --- Example Usage ---
@@ -224,15 +225,17 @@ if __name__ == "__main__":
         </html>
         """
 
-        success = send_gmail(
-            sender_email=Config.SENDER_EMAIL_ADDRESS,
-            app_password=Config.SENDER_EMAIL_PASSWORD,
-            recipient_email="test@gmail.com",
-            subject="Test from Global Function (HTML)",
-            body="Hello! This is the plain-text fallback for the HTML email.",
-            html_content=html_body
+        success: MailOutput = send_gmail.invoke(
+            MailInput(
+                sender_email_address=Config.SENDER_EMAIL_ADDRESS,
+                sender_email_password=Config.SENDER_EMAIL_PASSWORD,
+                recipient_email_address="test@gmail.com",
+                subject="Test from Global Function (HTML)",
+                body="Hello! This is the plain-text fallback for the HTML email.",
+                html_content=html_body
+            ).model_dump()
         )
-        logger.info("Global function (HTML) test result: %s", "Success" if success else "Failed")
+        logger.info(f"Global function (HTML) test result: {"Success" if success.success else "Failed"}")
 
     except Exception as e:
-        logger.error("Unhandled exception during global function test: %s", e)
+        logger.error(f"Unhandled exception during global function test: {e}")
