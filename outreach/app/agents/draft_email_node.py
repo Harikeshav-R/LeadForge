@@ -1,5 +1,6 @@
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
+from loguru import logger
 
 from app.core import Config
 from app.schemas import State, MailAgentOutput, MailInput
@@ -137,47 +138,103 @@ Tone: Maintain a positive, consultative, and professional tone from start to fin
     """
 
 
-def draft_email_node(state: State) -> State:
-    gemini_client = init_chat_model(
-        Config.MODEL_NAME,
-        model_provider=Config.MODEL_PROVIDER,
-        api_key=Config.GEMINI_API_KEY,
-    )
+def draft_email_node(state: "State") -> "State":
+    """Drafts a cold-outreach email using an LLM.
 
-    gemini_client = gemini_client.with_structured_output(MailAgentOutput)
+    This function initializes a Gemini LLM client, configures it for
+    structured output (MailAgentOutput), and constructs a prompt
+    using the current state. It then invokes the LLM to generate
+    a subject, plain-text body, and HTML content for a sales email.
+    The generated content is packaged into a MailInput object and
+    updated in the application state.
 
-    messages = [
-        SystemMessage(content=DRAFT_EMAIL_SYSTEM_PROMPT),
-        HumanMessage(
-            content=[
-                {
-                    "type": "text",
-                    "text":
-                        f"""
-                    Here are your inputs:
-                    COMPANY_NAME: {state.client_name}
-                    WEBSITE_CRITIQUE: {state.website_critique}
-                    DEMO_URL: {state.demo_url}
-                    SENDER_NAME: {state.sender_name}
-                    SENDER_TITLE: {state.sender_title}
-                    WEB_AGENCY_NAME: {state.web_agency_name}
-                    WEB_AGENCY_LOGO_URL: {state.web_agency_logo}
-                    """
-                }
-            ]
+    Args:
+        state (State): The current application state, containing client
+            details (name, email, critique, demo_url) and sender
+            details (name, title, agency name, logo).
+
+    Returns:
+        State: The updated application state, now including the
+            `email_contents` (MailInput) populated with the
+            LLM-generated draft.
+
+    Raises:
+        Exception: Re-raises any exceptions encountered during the
+            LLM client initialization, API invocation, or
+            response parsing. This signals a failure in the node.
+    """
+    try:
+        logger.info(
+            "Starting 'draft_email_node' for client: %s", state.client_name
         )
-    ]
 
-    response: MailAgentOutput = gemini_client.invoke(messages)
-    return state.model_copy(
-        update={
-            "email_contents": MailInput(
-                sender_email_address=Config.SENDER_EMAIL_ADDRESS,
-                sender_email_password=Config.SENDER_EMAIL_PASSWORD,
-                recipient_email_address=state.client_email,
-                subject=response.subject,
-                body=response.body,
-                html_content=response.html_content
+        # 1. Initialize LLM Client
+        logger.debug("Initializing Gemini client from Config...")
+        gemini_client = init_chat_model(
+            Config.MODEL_NAME,
+            model_provider=Config.MODEL_PROVIDER,
+            api_key=Config.GEMINI_API_KEY,
+        )
+
+        gemini_client = gemini_client.with_structured_output(MailAgentOutput)
+        logger.debug(
+            "Gemini client initialized and configured for structured output."
+        )
+
+        # 2. Construct Messages
+        logger.debug("Constructing message list for LLM.")
+        prompt_text = f"""
+            Here are your inputs:
+            COMPANY_NAME: {state.client_name}
+            WEBSITE_CRITIQUE: {state.website_critique}
+            DEMO_URL: {state.demo_url}
+            SENDER_NAME: {state.sender_name}
+            SENDER_TITLE: {state.sender_title}
+            WEB_AGENCY_NAME: {state.web_agency_name}
+            WEB_AGENCY_LOGO_URL: {state.web_agency_logo}
+            """
+
+        messages = [
+            SystemMessage(content=DRAFT_EMAIL_SYSTEM_PROMPT),
+            HumanMessage(content=[{"type": "text", "text": prompt_text}]),
+        ]
+
+        # 3. Invoke LLM
+        logger.info("Invoking Gemini model to draft email...")
+        response: "MailAgentOutput" = gemini_client.invoke(messages)
+
+        if not all([response.subject, response.body, response.html_content]):
+            logger.warning(
+                "LLM response was missing one or more required fields "
+                "(subject, body, html_content)."
             )
-        }
-    )
+            # Depending on logic, you might want to raise an error here
+            # if a partial response is unacceptable.
+
+        logger.info(
+            "Successfully drafted email. Subject: %s", response.subject
+        )
+
+        # 4. Update State
+        logger.debug("Updating state with new email contents...")
+        email_input = MailInput(
+            sender_email_address=Config.SENDER_EMAIL_ADDRESS,
+            sender_email_password=Config.SENDER_EMAIL_PASSWORD,
+            recipient_email_address=state.client_email,
+            subject=response.subject,
+            body=response.body,
+            html_content=response.html_content,
+        )
+
+        logger.info(
+            "'draft_email_node' completed for client: %s", state.client_name
+        )
+        return state.model_copy(update={"email_contents": email_input})
+
+    except Exception as e:
+        logger.error(
+            f"Error in 'draft_email_node' for client {state.client_name}: {e}",
+            exc_info=True,  # Logs the full stack trace
+        )
+        # Re-raise the exception to signal failure in the graph/workflow
+        raise
