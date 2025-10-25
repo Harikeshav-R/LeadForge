@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 
 from app.core import Config
-from app.schemas import State, MailAgentOutput, MailInput
+from app.schemas import State, MailAgentOutput
 from app.schemas.mail import Mail
 
 DRAFT_EMAIL_SYSTEM_PROMPT = \
@@ -166,7 +166,7 @@ def draft_email_node(state: "State") -> "State":
     """
     try:
         logger.info(
-            "Starting 'draft_email_node' for client: %s", state.client_name
+            f"Starting 'draft_email_node' for client: {state.client_name}"
         )
 
         # 1. Initialize LLM Client
@@ -213,7 +213,7 @@ def draft_email_node(state: "State") -> "State":
             # if a partial response is unacceptable.
 
         logger.info(
-            "Successfully drafted email. Subject: %s", response.subject
+            f"Successfully drafted email. Subject: {response.subject}"
         )
 
         # 4. Update State
@@ -226,7 +226,7 @@ def draft_email_node(state: "State") -> "State":
         )
 
         logger.info(
-            "'draft_email_node' completed for client: %s", state.client_name
+            f"'draft_email_node' completed for client: {state.client_name}"
         )
         return state.model_copy(update={"email_contents": mail})
 
