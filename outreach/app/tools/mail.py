@@ -101,16 +101,21 @@ class GmailSender:
             except smtplib.SMTPException as e:
                 logger.error("Error during server.quit(): %s", e)
 
-    def send_email(self, recipient_email: str, subject: str, body: str):
+    def send_email(self, recipient_email: str, subject: str, body: str,
+                   html_content: str | None = None):
         """Sends a single email.
 
         This method must be called within a 'with' block, after the
-        connection has been established.
+        connection has been established. If html_content is provided,
+        the email will be sent as a multipart/alternative message with
+        the plain text 'body' as a fallback.
 
         Args:
             recipient_email (str): The email address of the recipient.
             subject (str): The subject line of the email.
             body (str): The plain-text content of the email.
+            html_content (str | None, optional): The HTML content for the
+                                                email. Defaults to None.
 
         Raises:
             ConnectionError: If called before connecting (not in 'with' block).
@@ -131,6 +136,11 @@ class GmailSender:
         msg['From'] = self.sender_email
         msg['To'] = recipient_email
         msg.set_content(body)
+
+        # If HTML content is provided, add it as an 'alternative'
+        if html_content:
+            msg.add_alternative(html_content, subtype='html')
+            logger.info("Added HTML alternative to the email.")
 
         try:
             logger.info("Sending email to %s (Subject: %s)...",
@@ -157,7 +167,8 @@ class GmailSender:
 # --- Global Wrapper Function ---
 
 def send_gmail(sender_email: str, app_password: str, recipient_email: str,
-               subject: str, body: str) -> bool:
+               subject: str, body: str,
+               html_content: str | None = None) -> bool:
     """A global wrapper function to send a single email.
 
     This function handles the complete process:
@@ -172,6 +183,8 @@ def send_gmail(sender_email: str, app_password: str, recipient_email: str,
         recipient_email (str): The email address of the recipient.
         subject (str): The subject line of the email.
         body (str): The plain-text content of the email.
+        html_content (str | None, optional): The HTML content for the
+                                            email. Defaults to None.
 
     Returns:
         bool: True if the email was sent successfully, False otherwise.
@@ -180,7 +193,7 @@ def send_gmail(sender_email: str, app_password: str, recipient_email: str,
     try:
         # Use the class as a context manager
         with GmailSender(sender_email, app_password) as mailer:
-            mailer.send_email(recipient_email, subject, body)
+            mailer.send_email(recipient_email, subject, body, html_content)
         logger.info("--- Global function complete ---")
         return True
     except Exception as e:
@@ -192,16 +205,34 @@ def send_gmail(sender_email: str, app_password: str, recipient_email: str,
 # --- Example Usage ---
 
 if __name__ == "__main__":
-    logger.info("\n--- Testing Global Function ---")
+    # --- Example 1: Using the global wrapper function (HTML version) ---
+    # Easiest for sending a single email.
+
+    logger.info("\n--- Testing Global Function (with HTML) ---")
     try:
+        # Simple HTML content for testing
+        html_body = """
+        <html>
+        <head></head>
+        <body>
+            <h1 style="color: #336699;">Hello from Python!</h1>
+            <p>This email was sent using the 
+            <code style="background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px;">send_gmail()</code> 
+            wrapper function with HTML content.</p>
+            <p>Have a great day!</p>
+        </body>
+        </html>
+        """
+
         success = send_gmail(
             sender_email=Config.SENDER_EMAIL_ADDRESS,
             app_password=Config.SENDER_EMAIL_PASSWORD,
-            recipient_email="r.harikeshav@gmail.com",
-            subject="Test from Global Function",
-            body="Hello! This email was sent using the send_gmail() wrapper function."
+            recipient_email="test@gmail.com",
+            subject="Test from Global Function (HTML)",
+            body="Hello! This is the plain-text fallback for the HTML email.",
+            html_content=html_body
         )
-        logger.info("Global function test result: %s", "Success" if success else "Failed")
+        logger.info("Global function (HTML) test result: %s", "Success" if success else "Failed")
 
     except Exception as e:
         logger.error("Unhandled exception during global function test: %s", e)
