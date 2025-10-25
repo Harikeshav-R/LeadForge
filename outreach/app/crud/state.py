@@ -13,7 +13,7 @@ def create_state(db: Session, state_data: schemas.StateCreate) -> models.State:
 
     state_data = state_data.model_dump()
     email_data = state_data.pop('email_contents', None)
-    db_state = models.State(**state_data.model_dump())
+    db_state = models.State(**state_data)
 
     if email_data:
         db_email = models.Mail(**email_data)
