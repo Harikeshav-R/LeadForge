@@ -1,0 +1,40 @@
+import uuid
+
+from pydantic import BaseModel, Field
+
+from app.schemas.mail import MailInput
+
+
+class StateBase(BaseModel):
+    web_agency_name: str = Field(..., description="The name of the web agency.")
+    web_agency_logo: str = Field(..., description="The URL of the web agency logo.")
+    sender_name: str = Field(..., description="The name of the sender.")
+    sender_title: str = Field(..., description="The job title of the sender.")
+    website_critique: str = Field(...,
+                                  description="A detailed analysis of the critical issues and outdated elements of their current website.")
+    demo_url: str = Field(...,
+                          description="The link to the new, modern prototype website our agency has built for them.")
+    email_contents: MailInput | None = Field(None, description="The email contents to send.")
+
+
+class StateCreate(StateBase):
+    pass
+
+
+class StateUpdate(BaseModel):
+    web_agency_name: str | None = Field(None, description="The name of the web agency.")
+    web_agency_logo: str | None = Field(None, description="The URL of the web agency logo.")
+    sender_name: str | None = Field(None, description="The name of the sender.")
+    sender_title: str | None = Field(None, description="The job title of the sender.")
+    website_critique: str | None = Field(None,
+                                         description="A detailed analysis of the critical issues and outdated elements of their current website.")
+    demo_url: str | None = Field(None,
+                                 description="The link to the new, modern prototype website our agency has built for them.")
+    email_contents: MailInput | None = Field(None, description="The email contents to send.")
+
+
+class State(StateBase):
+    id: uuid.UUID = Field(..., description="ID of the state.")
+
+    class Config:
+        from_attributes = True
