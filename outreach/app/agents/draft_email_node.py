@@ -4,6 +4,7 @@ from loguru import logger
 
 from app.core import Config
 from app.schemas import State, MailAgentOutput, MailInput
+from app.schemas.mail import Mail
 
 DRAFT_EMAIL_SYSTEM_PROMPT = \
     """
@@ -217,9 +218,7 @@ def draft_email_node(state: "State") -> "State":
 
         # 4. Update State
         logger.debug("Updating state with new email contents...")
-        email_input = MailInput(
-            sender_email_address=Config.SENDER_EMAIL_ADDRESS,
-            sender_email_password=Config.SENDER_EMAIL_PASSWORD,
+        mail = Mail(
             recipient_email_address=state.client_email,
             subject=response.subject,
             body=response.body,
@@ -229,7 +228,7 @@ def draft_email_node(state: "State") -> "State":
         logger.info(
             "'draft_email_node' completed for client: %s", state.client_name
         )
-        return state.model_copy(update={"email_contents": email_input})
+        return state.model_copy(update={"email_contents": mail})
 
     except Exception as e:
         logger.error(

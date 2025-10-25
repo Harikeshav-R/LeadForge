@@ -166,7 +166,7 @@ class GmailSender:
 # --- Global Wrapper Function ---
 
 @tool(args_schema=MailInput)
-def send_gmail(sender_email_address: str, sender_email_password: str, recipient_email_address: str,
+def send_gmail(recipient_email_address: str,
                subject: str, body: str,
                html_content: str | None = None) -> MailOutput:
     """A global wrapper function to send a single email.
@@ -178,8 +178,6 @@ def send_gmail(sender_email_address: str, sender_email_password: str, recipient_
     4. Disconnects.
 
     Args:
-        sender_email_address (str): The Gmail address to send from.
-        sender_email_password (str): The 16-digit "App Password".
         recipient_email_address (str): The email address of the recipient.
         subject (str): The subject line of the email.
         body (str): The plain-text content of the email.
@@ -192,7 +190,7 @@ def send_gmail(sender_email_address: str, sender_email_password: str, recipient_
     logger.info("--- Using global send_gmail function ---")
     try:
         # Use the class as a context manager
-        with GmailSender(sender_email_address, sender_email_password) as mailer:
+        with GmailSender(Config.SENDER_EMAIL_ADDRESS, Config.SENDER_EMAIL_PASSWORD) as mailer:
             mailer.send_email(recipient_email_address, subject, body, html_content)
         logger.info("--- Global function complete ---")
         return MailOutput(success=True)
@@ -227,8 +225,6 @@ if __name__ == "__main__":
 
         success: MailOutput = send_gmail.invoke(
             MailInput(
-                sender_email_address=Config.SENDER_EMAIL_ADDRESS,
-                sender_email_password=Config.SENDER_EMAIL_PASSWORD,
                 recipient_email_address="test@gmail.com",
                 subject="Test from Global Function (HTML)",
                 body="Hello! This is the plain-text fallback for the HTML email.",

@@ -2,7 +2,7 @@ import uuid
 
 from pydantic import BaseModel, Field
 
-from app.schemas.mail import MailInput
+from app.schemas.mail import Mail
 
 
 class StateBase(BaseModel):
@@ -19,7 +19,7 @@ class StateBase(BaseModel):
     web_agency_name: str = Field(..., description="The name of the web agency.")
     web_agency_logo: str = Field(..., description="The URL of the web agency logo.")
 
-    email_contents: MailInput | None = Field(None, description="The email contents to send.")
+    email_contents: Mail | None = Field(None, description="The email contents to send.")
     email_sent: bool = Field(False, description="Whether the email has been sent.")
 
 
@@ -36,7 +36,7 @@ class StateUpdate(BaseModel):
                                          description="A detailed analysis of the critical issues and outdated elements of their current website.")
     demo_url: str | None = Field(None,
                                  description="The link to the new, modern prototype website our agency has built for them.")
-    email_contents: MailInput | None = Field(None, description="The email contents to send.")
+    email_contents: Mail | None = Field(None, description="The email contents to send.")
     email_sent: bool | None = Field(None, description="Whether the email has been sent.")
 
 
