@@ -208,3 +208,7 @@ __marimo__/
 
 # Gemini CLI auth files
 .gemini/
+
+# Google Calendar Secrets
+credentials.json
+token.json
