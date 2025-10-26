@@ -300,6 +300,90 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     }));
   };
 
+  // Handle sending email via outreach workflow (generate + send in one action)
+  const handleSendViaOutreach = async (lead: Lead) => {
+    const leadId = lead.id;
+    const goal = emailGoals[leadId] || EMAIL_CONFIG.DEFAULT_GOAL;
+    
+    // Start sending
+    updateLeadState(leadId, {
+      emailDraft: {
+        loading: true,
+        success: false,
+        error: null,
+        draftContent: {
+          to: lead.emails[0] || '',
+          subject: '',
+          body: '',
+          cc: '',
+          bcc: ''
+        },
+        showPreview: false,
+        sending: true,
+        sent: false,
+      },
+    });
+
+    try {
+      console.log('📧 Sending via outreach workflow for:', lead.name);
+      
+      // Call the outreach workflow
+      const result = await EmailApiService.sendEmailViaOutreach(lead, goal, {
+        websiteCritique: lead.website_review,
+        demoUrl: lead.deployed_website_url,
+      });
+      
+      console.log('✅ Outreach workflow result:', result);
+      
+      if (result.success) {
+        updateLeadState(leadId, {
+          emailDraft: {
+            loading: false,
+            success: true,
+            error: null,
+            draftContent: {
+              to: lead.emails[0] || '',
+              subject: result.emailContent?.subject || 'Email Sent',
+              body: result.emailContent?.body || 'Email sent successfully via outreach workflow',
+              cc: '',
+              bcc: ''
+            },
+            showPreview: false,
+            sending: false,
+            sent: true,
+          },
+        });
+        
+        alert(`✅ Email sent successfully to ${lead.emails[0]}!`);
+      } else {
+        throw new Error(result.message || 'Failed to send email');
+      }
+      
+    } catch (error) {
+      console.error('❌ Outreach workflow failed:', error);
+      
+      updateLeadState(leadId, {
+        emailDraft: {
+          loading: false,
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to send email via outreach workflow',
+          draftContent: {
+            to: lead.emails[0] || '',
+            subject: '',
+            body: '',
+            cc: '',
+            bcc: ''
+          },
+          showPreview: false,
+          sending: false,
+          sent: false,
+        },
+      });
+      
+      alert(`❌ Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   // Handle email draft creation
   const handleCreateEmailDraft = async (lead: Lead) => {
     const leadId = lead.id;
@@ -1097,36 +1181,43 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                   )}
                                 </div>
 
-                                {/* Draft Email Button */}
-                      <Button
-                        variant="primary"
+                                {/* Send Email Button - AI generates and sends via outreach workflow */}
+                                <Button
+                                  variant="primary"
                                   size="sm"
-                                  onClick={() => handleCreateEmailDraft(lead)}
-                                  disabled={emailState?.loading || lead.emails.length === 0}
-                                  title={lead.emails.length === 0 ? "No email address available for this lead" : ""}
+                                  onClick={() => handleSendViaOutreach(lead)}
+                                  disabled={emailState?.loading || emailState?.sending || lead.emails.length === 0}
+                                  title={lead.emails.length === 0 ? "No email address available for this lead" : "AI generates and sends email directly via hackohi00@gmail.com"}
                                   className="w-full"
                                 >
-                                  {emailState?.loading ? (
+                                  {emailState?.sending ? (
                                     <>
                                       <Loader2 className="w-4 h-4 animate-spin" />
-                                      Drafting...
+                                      Sending Email...
                                     </>
                                   ) : (
                                     <>
-                        <Mail className="w-4 h-4" />
-                                      {lead.emails.length === 0 ? "No Email Available" : "Draft Email"}
+                                      <Send className="w-4 h-4" />
+                                      {lead.emails.length === 0 ? "No Email Available" : "Send Email"}
                                     </>
                                   )}
                                 </Button>
                                 
                                 {/* Loading State Display */}
-                                {emailState?.loading && (
+                                {(emailState?.loading || emailState?.sending) && (
                                   <div className="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div className="flex items-center gap-3">
                                       <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
                                       <div className="flex-1">
-                                        <p className="text-sm font-medium text-blue-900">Generating draft...</p>
-                                        <p className="text-xs text-blue-700 mt-1">The AI is crafting a personalized email for {lead.name}</p>
+                                        <p className="text-sm font-medium text-blue-900">
+                                          {emailState?.sending ? 'Sending email...' : 'Generating draft...'}
+                                        </p>
+                                        <p className="text-xs text-blue-700 mt-1">
+                                          {emailState?.sending 
+                                            ? `The AI is generating and sending an email to ${lead.name} via ${EMAIL_CONFIG.SENDER_EMAIL}`
+                                            : `The AI is crafting a personalized email for ${lead.name}`
+                                          }
+                                        </p>
                                       </div>
                                     </div>
                                   </div>

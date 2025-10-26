@@ -803,6 +803,98 @@ IMPORTANT: Send this email to ${primaryRecipient}. Use this exact subject and bo
       throw error;
     }
   }
+
+  /**
+   * Send email using the outreach workflow service (port 8004)
+   * This drafts and sends in one operation using the outreach agent workflow
+   * The email is sent via Gmail SMTP using credentials from .env.dev
+   */
+  static async sendEmailViaOutreach(lead: Lead, goal: string, customFields?: {
+    websiteCritique?: string;
+    demoUrl?: string;
+  }): Promise<{ success: boolean; message?: string; emailContent?: any }> {
+    console.log('📧 Sending email via outreach workflow for:', lead.name, 'with goal:', goal);
+
+    try {
+      if (!lead.emails || lead.emails.length === 0) {
+        throw new Error('No email address available for this lead');
+      }
+
+      const startTime = Date.now();
+
+      // Build the State object for the outreach workflow
+      // Note: The 'goal' is embedded in the email generation prompt, not passed explicitly
+      const stateRequest = {
+        client_name: lead.name,
+        client_email: lead.emails[0],
+        sender_name: EMAIL_CONFIG.SENDER_NAME,
+        sender_title: EMAIL_CONFIG.SENDER_TITLE,
+        website_critique: customFields?.websiteCritique || 
+          lead.website_review || 
+          `We noticed some areas where ${lead.name}'s website could be improved with modern design and better user experience. Our team specializes in creating high-converting, professional websites that help businesses grow. ${goal ? `Our goal: ${goal}` : ''}`,
+        demo_url: customFields?.demoUrl || lead.deployed_website_url || lead.website || 'https://example.com',
+        web_agency_name: EMAIL_CONFIG.WEB_AGENCY_NAME,
+        web_agency_logo: EMAIL_CONFIG.WEB_AGENCY_LOGO,
+      };
+
+      console.log('📤 Sending workflow request to outreach service:', {
+        client_name: stateRequest.client_name,
+        client_email: stateRequest.client_email,
+        sender_name: stateRequest.sender_name,
+        hasWebsiteCritique: !!stateRequest.website_critique,
+        demo_url: stateRequest.demo_url,
+      });
+
+      // Call the outreach workflow endpoint
+      const response = await fetch(`${EMAIL_CONFIG.OUTREACH_API_URL}/workflow/create-workflow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(stateRequest),
+        signal: AbortSignal.timeout(120000) // 2 minute timeout for workflow
+      });
+
+      if (!response.ok) {
+        const errorMessage = await ApiErrorHandler.parseError(response);
+        throw new Error(errorMessage);
+      }
+
+      const workflowResponse = await response.json();
+      console.log('✅ Outreach workflow completed:', workflowResponse);
+
+      const endTime = Date.now();
+      const duration = (endTime - startTime) / 1000;
+      console.log(`🎯 Email workflow completed in ${duration}s`);
+
+      // Extract results from the workflow response
+      const finalState = workflowResponse.final_state || {};
+      const emailSent = finalState.email_sent || false;
+      const emailContents = finalState.email_contents || {};
+
+      return { 
+        success: emailSent,
+        message: emailSent 
+          ? 'Email sent successfully via outreach workflow' 
+          : 'Email failed to send',
+        emailContent: emailContents,
+      };
+
+    } catch (error) {
+      console.error('❌ Outreach email send failed:', error);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Email send timeout - The outreach agent is taking longer than expected. Please try again.');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
+          throw new Error('Cannot connect to the outreach service. Please ensure:\n1. The outreach service is running on port 8004\n2. Docker containers are started: docker-compose -f docker-compose.dev.yml up outreach\n3. Gmail credentials are set in .env.dev (SENDER_EMAIL_ADDRESS, SENDER_EMAIL_PASSWORD)');
+        }
+      }
+      
+      throw error;
+    }
+  }
 }
 
 // Export the service as default for backward compatibility
