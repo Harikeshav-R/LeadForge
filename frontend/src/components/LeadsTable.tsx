@@ -278,16 +278,6 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     return initialStates;
   });
 
-  // State for email goal customization
-  const [emailGoals, setEmailGoals] = useState<Record<string, string>>(() => {
-    const initialGoals: Record<string, string> = {};
-    leads.forEach(lead => {
-      initialGoals[lead.id] = EMAIL_CONFIG.DEFAULT_GOAL;
-    });
-    return initialGoals;
-  });
-
-  const [showGoalInput, setShowGoalInput] = useState<Record<string, boolean>>({});
 
   // Helper function to update lead state
   const updateLeadState = (leadId: string, updates: Partial<LeadActionState>) => {
@@ -303,7 +293,8 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   // Handle sending email via outreach workflow (generate + send in one action)
   const handleSendViaOutreach = async (lead: Lead) => {
     const leadId = lead.id;
-    const goal = emailGoals[leadId] || EMAIL_CONFIG.DEFAULT_GOAL;
+    const goal = EMAIL_CONFIG.DEFAULT_GOAL;
+    const currentState = leadStates[leadId];
     
     // Start sending
     updateLeadState(leadId, {
@@ -327,10 +318,15 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     try {
       console.log('📧 Sending via outreach workflow for:', lead.name);
       
+      // Use deployed URL from state if available, otherwise fall back to lead's deployed_website_url
+      const deployedUrl = currentState?.websiteBuild.deployedUrl || lead.deployed_website_url;
+      
+      console.log('🎯 Using deployed URL:', deployedUrl);
+      
       // Call the outreach workflow
       const result = await EmailApiService.sendEmailViaOutreach(lead, goal, {
         websiteCritique: lead.website_review,
-        demoUrl: lead.deployed_website_url,
+        demoUrl: deployedUrl,
       });
       
       console.log('✅ Outreach workflow result:', result);
@@ -354,7 +350,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
           },
         });
         
-        alert(`✅ Email sent successfully to ${lead.emails[0]}!`);
+        alert(`✅ Email sent successfully!`);
       } else {
         throw new Error(result.message || 'Failed to send email');
       }
@@ -387,7 +383,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   // Handle email draft creation
   const handleCreateEmailDraft = async (lead: Lead) => {
     const leadId = lead.id;
-    const goal = emailGoals[leadId] || EMAIL_CONFIG.DEFAULT_GOAL;
+    const goal = EMAIL_CONFIG.DEFAULT_GOAL;
     
     // Reset state and start loading
     updateLeadState(leadId, {
@@ -1139,48 +1135,9 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                               );
                             }
                             
-                            // Default: show goal input and draft email button
+                            // Default: show draft email button
                             return (
                               <div className="space-y-2">
-                                {/* Email Goal Customization */}
-                                <div className="space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <label className="text-xs font-medium text-gray-600">Email Goal:</label>
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      className="text-xs px-2 py-1 h-6"
-                                      onClick={() => {
-                                        setShowGoalInput(prev => ({
-                                          ...prev,
-                                          [lead.id]: !prev[lead.id]
-                                        }));
-                                      }}
-                                    >
-                                      {showGoalInput[lead.id] ? 'Hide' : 'Customize'}
-                                    </Button>
-                                  </div>
-                                  
-                                  {showGoalInput[lead.id] ? (
-                                    <textarea
-                                      value={emailGoals[lead.id] || EMAIL_CONFIG.DEFAULT_GOAL}
-                                      onChange={(e) => {
-                                        setEmailGoals(prev => ({
-                                          ...prev,
-                                          [lead.id]: e.target.value
-                                        }));
-                                      }}
-                                      className="w-full text-xs p-2 border border-gray-300 rounded resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                      rows={3}
-                                      placeholder="Enter your email goal/pitch..."
-                                    />
-                                  ) : (
-                                    <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border truncate">
-                                      {emailGoals[lead.id] || EMAIL_CONFIG.DEFAULT_GOAL}
-                                    </div>
-                                  )}
-                                </div>
-
                                 {/* Send Email Button - AI generates and sends via outreach workflow */}
                                 <Button
                                   variant="primary"
