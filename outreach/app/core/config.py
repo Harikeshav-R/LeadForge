@@ -15,6 +15,7 @@ class Config:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     MODEL_NAME: str = os.getenv("MODEL_NAME")
     MODEL_PROVIDER: str = os.getenv("MODEL_PROVIDER")
+<<<<<<< HEAD
 
     SENDER_EMAIL_ADDRESS: str = os.getenv("SENDER_EMAIL_ADDRESS")
     SENDER_EMAIL_PASSWORD: str = os.getenv("SENDER_EMAIL_PASSWORD")
@@ -24,3 +25,5 @@ class Config:
     TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER")
 
     BASE_WS_URL: str = os.getenv("BASE_WS_URL")
+=======
+>>>>>>> main-holder

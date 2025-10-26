@@ -24,7 +24,11 @@ COPY . .
 
 # Stage 2: Development image
 FROM sources AS dev
+<<<<<<< HEAD
 CMD ["uv", "run" ,"uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8004", "--reload", "--proxy-headers", "--forwarded-allow-ips=\"*\""]
+=======
+CMD ["uv", "run" ,"uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8004", "--reload"]
+>>>>>>> main-holder
 
 
 # Stage 3: Production image

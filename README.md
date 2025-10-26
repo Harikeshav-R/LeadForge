@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # LeadForge
 
 AI-Powered Sales Development Representative Platform
@@ -248,3 +249,7 @@ If you want, I can refine this README to include:
 - A generated API reference (endpoints, request examples) from backend route definitions
 
 To do that I will need the files listed in the "What to inspect next" section (or repo read access). Thank you — this README is based on the files currently present in the repository (including the .env.dev.example and top-level structure).````
+=======
+# HackOHIO
+AI Powered Sales Development Representative System
+>>>>>>> main-holder

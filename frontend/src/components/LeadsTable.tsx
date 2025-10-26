@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 // UI Refactor: Updated to use shadcn/ui components (Card, Button, Input, Label, Badge, Dialog, Separator, Table)
 // Maintains all existing functionality while improving UI consistency and accessibility
+=======
+>>>>>>> main-holder
 import { useState } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
@@ -7,6 +10,7 @@ import { ExternalLink, Mail, Phone, Building2, Globe, Loader2, CheckCircle, Refr
 import { BuilderApiService, DeployerApiService, EmailApiService } from '../services/api';
 import type { Lead, EmailContent } from '../types';
 import { EMAIL_CONFIG } from '../config/email';
+<<<<<<< HEAD
 import {
   Table,
   TableBody,
@@ -16,6 +20,8 @@ import {
   TableRow,
 } from './ui/table';
 import { ScrollArea } from './ui/scroll-area';
+=======
+>>>>>>> main-holder
 
 // Normalize email agent response to structured format
 const normalizeEmailResponse = (rawResponse: any, fallbackEmail: string): EmailContent => {
@@ -278,6 +284,19 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     return initialStates;
   });
 
+<<<<<<< HEAD
+=======
+  // State for email goal customization
+  const [emailGoals, setEmailGoals] = useState<Record<string, string>>(() => {
+    const initialGoals: Record<string, string> = {};
+    leads.forEach(lead => {
+      initialGoals[lead.id] = EMAIL_CONFIG.DEFAULT_GOAL;
+    });
+    return initialGoals;
+  });
+
+  const [showGoalInput, setShowGoalInput] = useState<Record<string, boolean>>({});
+>>>>>>> main-holder
 
   // Helper function to update lead state
   const updateLeadState = (leadId: string, updates: Partial<LeadActionState>) => {
@@ -290,6 +309,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     }));
   };
 
+<<<<<<< HEAD
   // Handle sending email via outreach workflow (generate + send in one action)
   const handleSendViaOutreach = async (lead: Lead) => {
     const leadId = lead.id;
@@ -384,6 +404,12 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   const handleCreateEmailDraft = async (lead: Lead) => {
     const leadId = lead.id;
     const goal = EMAIL_CONFIG.DEFAULT_GOAL;
+=======
+  // Handle email draft creation
+  const handleCreateEmailDraft = async (lead: Lead) => {
+    const leadId = lead.id;
+    const goal = emailGoals[leadId] || EMAIL_CONFIG.DEFAULT_GOAL;
+>>>>>>> main-holder
     
     // Reset state and start loading
     updateLeadState(leadId, {
@@ -759,6 +785,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     handleCreateEmailDraft(lead);
   };
 
+<<<<<<< HEAD
   const handleRetryWebsiteBuild = async (lead: Lead) => {
     const leadId = lead.id;
     
@@ -1018,16 +1045,35 @@ export function LeadsTable({ leads }: LeadsTableProps) {
           error: 'Failed to preview website. Please try downloading the zip file.',
         },
       });
+=======
+  const handleRetryWebsiteBuild = (lead: Lead) => {
+    const leadId = lead.id;
+    const currentState = leadStates[leadId];
+    
+    // If we have a built website, retry deployment
+    // Otherwise, retry building
+    if (currentState?.websiteBuild.websiteZip && currentState?.websiteBuild.stage === 'built') {
+      handleDeployWebsite(lead);
+    } else {
+      handleBuildWebsite(lead);
+>>>>>>> main-holder
     }
   };
 
   if (leads.length === 0) {
     return (
+<<<<<<< HEAD
       <Card className="text-center py-20 px-8">
         {/* Added more generous padding for empty state */}
         <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-8" />
         <h3 className="text-xl font-semibold text-foreground mb-4">No leads yet</h3>
         <p className="text-lg text-muted-foreground max-w-md mx-auto">
+=======
+      <Card className="text-center py-16">
+        <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-3">No leads yet</h3>
+        <p className="text-lg text-gray-600">
+>>>>>>> main-holder
           Start a campaign to discover potential customers
         </p>
       </Card>
@@ -1035,6 +1081,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   return (
+<<<<<<< HEAD
     <Card className="overflow-hidden p-0 border border-border">
       <div className="px-8 py-6 border-b border-border">
         <h2 className="text-2xl font-semibold text-foreground tracking-tight">Discovered Leads</h2>
@@ -1051,10 +1098,35 @@ export function LeadsTable({ leads }: LeadsTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
+=======
+    <Card className="overflow-hidden p-0">
+      <div className="px-8 py-6 border-b border-gray-200 bg-gray-50">
+        <h2 className="text-2xl font-semibold text-gray-900">Discovered Leads</h2>
+        <p className="text-base text-gray-600 mt-2">{leads.length} businesses found</p>
+      </div>
+
+      <div className="overflow-x-auto -mx-8">
+        <table className="w-full min-w-[1200px]">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                Business
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                Contact
+              </th>
+              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+>>>>>>> main-holder
             {leads.map((lead) => {
               const leadState = leadStates[lead.id];
               
               return (
+<<<<<<< HEAD
               <TableRow key={lead.id} className="hover:bg-muted/30 transition-colors">
                 <TableCell className="py-6">
                   <div className="flex flex-col space-y-2">
@@ -1067,34 +1139,72 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                     )}
                     {lead.rating && (
                       <div className="text-xs text-muted-foreground leading-5">
+=======
+              <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-8 py-6">
+                  <div className="flex flex-col">
+                    <div className="text-base font-semibold text-gray-900 mb-1">
+                      {lead.name}
+                    </div>
+                    <div className="text-sm text-gray-500 mb-1">{lead.address}</div>
+                    {lead.category && (
+                      <div className="text-xs text-gray-400">{lead.category}</div>
+                    )}
+                    {lead.rating && (
+                      <div className="text-sm text-gray-600">
+>>>>>>> main-holder
                         ⭐ {lead.rating.toFixed(1)} ({lead.total_ratings} reviews)
                       </div>
                     )}
                   </div>
+<<<<<<< HEAD
                 </TableCell>
                 <TableCell className="py-6">
                   <div className="flex flex-col gap-2">
                     {lead.phone_number && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
                         <Phone className="w-3.5 h-3.5" />
+=======
+                </td>
+                <td className="px-8 py-6">
+                  <div className="flex flex-col gap-2">
+                    {lead.phone_number && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="w-4 h-4" />
+>>>>>>> main-holder
                         {lead.phone_number}
                       </div>
                     )}
                     {lead.emails.length > 0 && (
+<<<<<<< HEAD
                       <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
                         <Mail className="w-3.5 h-3.5" />
+=======
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="w-4 h-4" />
+>>>>>>> main-holder
                         {lead.emails[0]}
                       </div>
                     )}
                     {lead.phone_numbers.length > 0 && lead.phone_numbers[0] !== lead.phone_number && (
+<<<<<<< HEAD
                       <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
                         <Phone className="w-3.5 h-3.5" />
+=======
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="w-4 h-4" />
+>>>>>>> main-holder
                         {lead.phone_numbers[0]}
                       </div>
                     )}
                   </div>
+<<<<<<< HEAD
                 </TableCell>
                 <TableCell className="py-6">
+=======
+                </td>
+                <td className="px-8 py-6">
+>>>>>>> main-holder
                     <div className="flex flex-col gap-3">
                       {/* Draft Email Section */}
                       {lead.emails.length > 0 && (
@@ -1135,6 +1245,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                               );
                             }
                             
+<<<<<<< HEAD
                             // Default: show draft email button
                             return (
                               <div className="space-y-2">
@@ -1156,16 +1267,83 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                     <>
                                       <Send className="w-4 h-4" />
                                       {lead.emails.length === 0 ? "No Email Available" : "Send Email"}
+=======
+                            // Default: show goal input and draft email button
+                            return (
+                              <div className="space-y-2">
+                                {/* Email Goal Customization */}
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-xs font-medium text-gray-600">Email Goal:</label>
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="text-xs px-2 py-1 h-6"
+                                      onClick={() => {
+                                        setShowGoalInput(prev => ({
+                                          ...prev,
+                                          [lead.id]: !prev[lead.id]
+                                        }));
+                                      }}
+                                    >
+                                      {showGoalInput[lead.id] ? 'Hide' : 'Customize'}
+                                    </Button>
+                                  </div>
+                                  
+                                  {showGoalInput[lead.id] ? (
+                                    <textarea
+                                      value={emailGoals[lead.id] || EMAIL_CONFIG.DEFAULT_GOAL}
+                                      onChange={(e) => {
+                                        setEmailGoals(prev => ({
+                                          ...prev,
+                                          [lead.id]: e.target.value
+                                        }));
+                                      }}
+                                      className="w-full text-xs p-2 border border-gray-300 rounded resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      rows={3}
+                                      placeholder="Enter your email goal/pitch..."
+                                    />
+                                  ) : (
+                                    <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded border truncate">
+                                      {emailGoals[lead.id] || EMAIL_CONFIG.DEFAULT_GOAL}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Draft Email Button */}
+                      <Button
+                        variant="primary"
+                                  size="sm"
+                                  onClick={() => handleCreateEmailDraft(lead)}
+                                  disabled={emailState?.loading || lead.emails.length === 0}
+                                  title={lead.emails.length === 0 ? "No email address available for this lead" : ""}
+                                  className="w-full"
+                                >
+                                  {emailState?.loading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Drafting...
+                                    </>
+                                  ) : (
+                                    <>
+                        <Mail className="w-4 h-4" />
+                                      {lead.emails.length === 0 ? "No Email Available" : "Draft Email"}
+>>>>>>> main-holder
                                     </>
                                   )}
                                 </Button>
                                 
                                 {/* Loading State Display */}
+<<<<<<< HEAD
                                 {(emailState?.loading || emailState?.sending) && (
+=======
+                                {emailState?.loading && (
+>>>>>>> main-holder
                                   <div className="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div className="flex items-center gap-3">
                                       <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
                                       <div className="flex-1">
+<<<<<<< HEAD
                                         <p className="text-sm font-medium text-blue-900">
                                           {emailState?.sending ? 'Sending email...' : 'Generating draft...'}
                                         </p>
@@ -1175,6 +1353,10 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                             : `The AI is crafting a personalized email for ${lead.name}`
                                           }
                                         </p>
+=======
+                                        <p className="text-sm font-medium text-blue-900">Generating draft...</p>
+                                        <p className="text-xs text-blue-700 mt-1">The AI is crafting a personalized email for {lead.name}</p>
+>>>>>>> main-holder
                                       </div>
                                     </div>
                                   </div>
@@ -1445,7 +1627,11 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                             );
                           }
                           
+<<<<<<< HEAD
                           // Built but not deployed - show Preview and Deploy buttons
+=======
+                          // Built but not deployed - show Deploy button
+>>>>>>> main-holder
                           if (buildState?.success && buildState?.websiteZip && stage === 'built' && !buildState?.deployedUrl) {
                             return (
                               <>
@@ -1453,6 +1639,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                   <CheckCircle className="w-4 h-4" />
                                   Website Built
                                 </div>
+<<<<<<< HEAD
                                 <div className="flex flex-col gap-2">
                                   <Button
                                     variant="secondary"
@@ -1493,6 +1680,26 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                     )}
                                   </Button>
                                 </div>
+=======
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleDeployWebsite(lead)}
+                                  disabled={buildState?.loading}
+                                >
+                                  {buildState?.loading ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Deploying...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Globe className="w-4 h-4" />
+                                      Deploy Website
+                                    </>
+                                  )}
+                                </Button>
+>>>>>>> main-holder
                               </>
                             );
                           }
@@ -1575,6 +1782,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                       </div>
                     )}
                   </div>
+<<<<<<< HEAD
                 </TableCell>
               </TableRow>
               );
@@ -1582,6 +1790,15 @@ export function LeadsTable({ leads }: LeadsTableProps) {
           </TableBody>
         </Table>
       </ScrollArea>
+=======
+                </td>
+              </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+>>>>>>> main-holder
     </Card>
   );
 }

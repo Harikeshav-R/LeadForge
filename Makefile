@@ -9,7 +9,11 @@ PROD_COMPOSE_FILE := -f docker-compose.prod.yml
 .DEFAULT_GOAL := help
 
 # Phony targets prevent conflicts with files of the same name
+<<<<<<< HEAD
 .PHONY: prune dev dev-up dev-build dev-down dev-stop dev-restart dev-logs dev-logs-backend dev-logs-frontend dev-logs-leads dev-logs-builder dev-logs-deployer dev-logs-outreach dev-shell-backend dev-shell-frontend dev-shell-db dev-shell-leads dev-shell-builder dev-shell-deployer dev-shell-outreach prod prod-up prod-build prod-down prod-stop prod-restart prod-logs prod-logs-backend prod-logs-frontend prod-logs-leads prod-logs-builder prod-logs-deployer prod-logs-outreach prod-shell-backend prod-shell-frontend prod-shell-db prod-shell-leads prod-shell-builder prod-shell-deployer prod-shell-outreach
+=======
+.PHONY: prune dev dev-up dev-build dev-down dev-stop dev-restart dev-logs dev-logs-backend dev-logs-frontend dev-logs-leads dev-logs-builder dev-logs-deployer dev-shell-backend dev-shell-frontend dev-shell-db dev-shell-leads dev-shell-builder dev-shell-deployer prod prod-up prod-build prod-down prod-stop prod-restart prod-logs prod-logs-backend prod-logs-frontend prod-logs-leads prod-logs-builder prod-logs-deployer prod-shell-backend prod-shell-frontend prod-shell-db prod-shell-leads prod-shell-builder prod-shell-deployer
+>>>>>>> main-holder
 
 # --- General Utility Commands ---
 
@@ -74,10 +78,13 @@ dev-logs-deployer: ## View and follow logs for the development deployer service 
 	@echo "Following deployer logs..."
 	@docker-compose $(DEV_COMPOSE_FILE) logs -f deployer
 
+<<<<<<< HEAD
 dev-logs-outreach: ## View and follow logs for the development outreach service only.
 	@echo "Following outreach logs..."
 	@docker-compose $(DEV_COMPOSE_FILE) logs -f outreach
 
+=======
+>>>>>>> main-holder
 dev-shell-backend: ## Open a bash shell inside the running development backend container.
 	@echo "Opening bash shell in backend container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec backend /bin/bash
@@ -98,10 +105,13 @@ dev-shell-deployer: ## Open a bash shell inside the running development deployer
 	@echo "Opening bash shell in deployer container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec deployer /bin/bash
 
+<<<<<<< HEAD
 dev-shell-outreach: ## Open a bash shell inside the running development outreach container.
 	@echo "Opening bash shell in outreach container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec outreach /bin/bash
 
+=======
+>>>>>>> main-holder
 dev-shell-db: ## Open a psql shell to interact with the development PostgreSQL database.
 	@echo "Opening psql shell in db container..."
 	@docker-compose $(DEV_COMPOSE_FILE) exec db psql -U $$(grep POSTGRES_USER .env.dev | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env.dev | cut -d '=' -f2)
@@ -155,10 +165,13 @@ prod-logs-deployer: ## View and follow logs for the production deployer service 
 	@echo "Following production deployer logs..."
 	@docker-compose $(PROD_COMPOSE_FILE) logs -f deployer
 
+<<<<<<< HEAD
 prod-logs-outreach: ## View and follow logs for the production outreach service only.
 	@echo "Following production outreach logs..."
 	@docker-compose $(PROD_COMPOSE_FILE) logs -f outreach
 
+=======
+>>>>>>> main-holder
 prod-shell-backend: ## Open a bash shell inside the running production backend container.
 	@echo "Opening bash shell in production backend container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec backend /bin/bash
@@ -179,12 +192,15 @@ prod-shell-deployer: ## Open a bash shell inside the running production deployer
 	@echo "Opening bash shell in production deployer container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec deployer /bin/bash
 
+<<<<<<< HEAD
 prod-shell-outreach: ## Open a bash shell inside the running production deployer container.
 	@echo "Opening bash shell in production outreach container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec outreach /bin/bash
 
 
 
+=======
+>>>>>>> main-holder
 prod-shell-db: ## Open a psql shell to interact with the production PostgreSQL database.
 	@echo "Opening psql shell in production db container..."
 	@docker-compose $(PROD_COMPOSE_FILE) exec db psql -U $$(grep POSTGRES_USER .env.prod | cut -d '=' -f2) -d $$(grep POSTGRES_DB .env.prod | cut -d '=' -f2)

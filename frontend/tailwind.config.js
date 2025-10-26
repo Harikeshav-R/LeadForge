@@ -1,11 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+<<<<<<< HEAD
   darkMode: ["class"],
+=======
+>>>>>>> main-holder
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+<<<<<<< HEAD
     container: {
       center: true,
       padding: "2rem",
@@ -63,10 +67,27 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+=======
+    extend: {
+      colors: {
+        primary: {
+          50: '#fdf2f2',
+          100: '#fce4e4',
+          200: '#f9cdcd',
+          300: '#f5a8a8',
+          400: '#ef7575',
+          500: '#e74c3c',
+          600: '#d73527',
+          700: '#b42318',
+          800: '#951b16',
+          900: '#7c1d1d',
+        },
+>>>>>>> main-holder
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
+<<<<<<< HEAD
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -84,4 +105,9 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
+=======
+    },
+  },
+  plugins: [],
+>>>>>>> main-holder
 }

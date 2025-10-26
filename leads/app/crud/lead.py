@@ -164,7 +164,11 @@ def delete_lead(db: Session, lead_id: uuid.UUID) -> models.Lead | None:
     Returns:
         The deleted Lead model instance if found and deleted, otherwise None.
     """
+<<<<<<< HEAD
     logger.info(f"Attempting to delete lead with ID: {lead_id}")
+=======
+    logger.info("Attempting to delete lead with ID: %s", lead_id)
+>>>>>>> main-holder
     # Retrieve the lead to be deleted.
     db_lead = read_lead(db, lead_id)
 

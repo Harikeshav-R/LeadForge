@@ -15,9 +15,14 @@ dependencies = [
     "langchain-google-genai>=3.0.0",
     "langgraph>=1.0.1",
     "loguru>=0.7.3",
+<<<<<<< HEAD
     "onnxruntime>=1.23.2",
     "pipecat-ai[cartesia,openai,silero,deepgram,google]>=0.0.91",
     "psycopg2-binary>=2.9.11",
     "sqlalchemy>=2.0.44",
     "twilio>=9.8.4",
+=======
+    "psycopg2-binary>=2.9.11",
+    "sqlalchemy>=2.0.44",
+>>>>>>> main-holder
 ]
