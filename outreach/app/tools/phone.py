@@ -178,7 +178,7 @@ def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, 
     state_id = str(state_id)
     safe_state_id = urllib.parse.quote(state_id)
 
-    ws_url = f"{Config.BASE_WS_URL}/ws/{safe_state_id}"
+    ws_url = f"wss://{Config.BASE_WS_URL}/ws/{safe_state_id}"
 
     logger.info(f"Starting phone call with WS URL: {ws_url}")
 
@@ -197,7 +197,7 @@ def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, 
         to=to_phone_number,
         from_=from_phone_number,
         record=True,
-        recording_status_callback=f"{Config.BASE_WS_URL}/phone/recording-webhook",
+        recording_status_callback=f"https://{Config.BASE_WS_URL}/phone/recording-webhook",
         recording_status_callback_method="POST"
     )
 
