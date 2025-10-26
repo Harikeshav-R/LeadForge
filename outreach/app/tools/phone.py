@@ -209,7 +209,10 @@ def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, 
     call = client.calls.create(
         twiml=twiml_string,
         to=to_phone_number,
-        from_=from_phone_number
+        from_=from_phone_number,
+        record=True,
+        recording_status_callback=f"{Config.BASE_WS_URL}/phone/recording-webhook",
+        recording_status_callback_method="POST"
     )
 
     return True
