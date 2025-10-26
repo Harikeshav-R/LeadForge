@@ -11,6 +11,7 @@ from pipecat.transports.network.fastapi_websocket import (
     FastAPIWebsocketTransport,
 )
 from starlette.websockets import WebSocket
+from twilio.rest import Client
 
 from app.core import Config
 
@@ -65,3 +66,15 @@ async def phone_call(websocket_client: WebSocket, stream_sid: str, call_sid: str
     runner = PipelineRunner(handle_sigint=False)
 
     await runner.run(task)
+
+
+def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, to_phone_number: str):
+    client = Client(account_sid, auth_token)
+
+    call = client.calls.create(
+        twiml=open("templates/streams.xml").read(),
+        to=to_phone_number,
+        from_=from_phone_number
+    )
+
+    return True
