@@ -17,6 +17,7 @@ class State(Base):
 
     client_name = Column(String, nullable=False)
     client_email = Column(String, nullable=False)
+    client_phone_number = Column(String, nullable=False)
 
     sender_name = Column(String, nullable=False)
     sender_title = Column(String, nullable=False)
@@ -27,6 +28,8 @@ class State(Base):
     web_agency_logo = Column(String, nullable=False)  # Assuming this is a URL
 
     email_sent = Column(Boolean, default=False, nullable=False)
+
+    phone_call_system_instructions = Column(Text, nullable=True)
 
     # Foreign key to link to the Mail table
     # This assumes a State can have one optional email
