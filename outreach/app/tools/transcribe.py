@@ -1,4 +1,5 @@
 import base64
+import datetime
 
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
@@ -104,7 +105,8 @@ def transcribe_and_analyze_audio(audio_data: bytes) -> PhoneAnalysisOutput:
         SystemMessage(content=TRANSCRIPTION_SYSTEM_PROMPT),
         HumanMessage(
             content=[
-                {"type": "text", "text": "Here is your audio:"},
+                {"type": "text",
+                 "text": f"The time the call was made is {str(datetime.datetime.now())}. Here is the recording of the audio call:"},
                 {
                     "type": "media",
                     "data": base64.b64encode(audio_data).decode("utf-8"),
