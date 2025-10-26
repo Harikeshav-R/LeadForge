@@ -115,7 +115,7 @@ def create_meet_test():
         end_time = (now + timedelta(minutes=35)).astimezone().isoformat()
 
         result = create_calendar_event_with_meet(
-            summary="FastAPI + Google Meet Test",
+            summary="Google Meet Test",
             description="This meeting was created through OAuth using FastAPI.",
             start_time=start_time,
             end_time=end_time,
