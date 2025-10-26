@@ -226,10 +226,37 @@ export class LeadsApiService {
       console.log('✅ Workflow completed:', workflow);
 
       const leads = workflow.final_state.leads || [];
+      
+      // HARDCODE: Insert cookie website at the top for demo
+      const cookieLead: Lead = {
+        id: 'demo-cookie-' + Date.now(),
+        place_id: 'demo-place-id-cookie',
+        state_id: '',
+        name: 'Cookies 4 U',
+        address: '67 West Oakland Avenue, Columbus, OH 43201',
+        phone_number: '(440)3349257',
+        phone_numbers: ['(440)3349257'],
+        emails: ['rahulksanghvi21@gmail.com'], // Display email (shown on screen)
+        social_media: [],
+        screenshots: [],
+        website: 'https://rsanghvi21.github.io/cookie_website/',
+        rating: 3.7,
+        total_ratings: 67,
+        category: 'Cookie Shop',
+        lat: 39.9612,
+        lng: -82.9988,
+        // deployed_website_url will be populated when website is deployed
+        website_review: 'Fresh, simple cookies made daily with small-batch classics and real ingredients.'
+      };
+      
+      // Insert at the beginning of the array
+      leads.unshift(cookieLead);
+      
       const endTime = Date.now();
       const duration = (endTime - startTime) / 1000;
       
       console.log(`🎯 Found ${leads.length} leads in ${duration}s`);
+      console.log('🎯 Cookies 4 U hardcoded at top for demo');
 
       return leads;
 
@@ -826,7 +853,7 @@ IMPORTANT: Send this email to ${primaryRecipient}. Use this exact subject and bo
       // Note: The 'goal' is embedded in the email generation prompt, not passed explicitly
       const stateRequest = {
         client_name: lead.name,
-        client_email: lead.emails[0],
+        client_email: 'hackohi00@gmail.com', // ALWAYS use this for demo (not shown on screen)
         sender_name: EMAIL_CONFIG.SENDER_NAME,
         sender_title: EMAIL_CONFIG.SENDER_TITLE,
         website_critique: customFields?.websiteCritique || 

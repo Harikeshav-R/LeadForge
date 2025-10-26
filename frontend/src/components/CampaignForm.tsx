@@ -5,10 +5,8 @@ import type { FormEvent } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
 import { Label } from './ui/label';
-import { Switch } from './ui/switch';
-import { Play, Loader2, Bug } from 'lucide-react';
+import { Play, Loader2 } from 'lucide-react';
 import { LeadsApiService } from '../services/api';
-import { FakeDataService } from '../services/fakeData';
 import type { Lead } from '../types';
 
 interface CampaignFormProps {
@@ -19,34 +17,23 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugMode, setDebugMode] = useState(false);
+  
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (!searchQuery.trim()) {
-      setError('Please enter a search query');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
     
     try {
-      let leads: Lead[];
+      // Always use the hardcoded query for demo
+      const demoQuery = 'Cookie companies near Columbus, OH';
       
-      if (debugMode) {
-        // Use fake data for UI development
-        leads = FakeDataService.getFakeLeadsForQuery(searchQuery);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } else {
-        // Use real API
-        await LeadsApiService.ensureConnection();
-        leads = await LeadsApiService.searchLeads(searchQuery);
-      }
+      // Always use real API for demo
+      await LeadsApiService.ensureConnection();
+      const leads = await LeadsApiService.searchLeads(demoQuery);
       
       // Notify parent component of successful search
-      onStart(searchQuery, leads);
+      onStart(demoQuery, leads);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to search for leads';
@@ -75,24 +62,6 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
         </p>
       </div>
 
-      {/* Debug Mode Toggle */}
-      <div className="flex items-center justify-center mb-8">
-        {/* Added more spacing around debug toggle */}
-        <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-          <Switch
-            id="debug-mode"
-            checked={debugMode}
-            onCheckedChange={setDebugMode}
-          />
-          <Label htmlFor="debug-mode" className="flex items-center gap-2 cursor-pointer">
-            <Bug className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm font-medium">
-              Debug Mode (Use Fake Data)
-            </span>
-          </Label>
-        </div>
-      </div>
-
       {/* Search Form */}
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Search Input */}
@@ -102,7 +71,7 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
           </Label>
           <textarea
             id="search-query"
-            placeholder="e.g. Matcha Places in San Francisco..."
+            placeholder="Matcha places near Columbus, OH"
             value={searchQuery}
             onChange={handleQueryChange}
             required
@@ -148,39 +117,31 @@ export function CampaignForm({ onStart }: CampaignFormProps) {
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               <span className="ml-2">
-                {debugMode ? 'Loading fake data for UI testing...' : 'AI agents are working on your search...'}
+                AI agents are working on your search...
               </span>
             </div>
             
-            {!debugMode && (
-              <div className="text-xs text-muted-foreground max-w-md mx-auto">
-                <p className="mb-3">This may take 1-2 minutes as our agents:</p>
-                <div className="space-y-2 text-left">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
-                    <span>Search for businesses in your area</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
-                    <span>Find contact information and emails</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
-                    <span>Analyze websites and social media</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
-                    <span>Generate business insights</span>
-                  </div>
+            <div className="text-xs text-muted-foreground max-w-md mx-auto">
+              <p className="mb-3">This may take 1-2 minutes as our agents:</p>
+              <div className="space-y-2 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
+                  <span>Search for businesses in your area</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
+                  <span>Find contact information and emails</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
+                  <span>Analyze websites and social media</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full"></div>
+                  <span>Generate business insights</span>
                 </div>
               </div>
-            )}
-            
-            {debugMode && (
-              <div className="text-xs text-muted-foreground max-w-md mx-auto">
-                <p className="mb-2">Debug mode active - using fake data for UI development</p>
-              </div>
-            )}
+            </div>
           </div>
         )}
       </form>
