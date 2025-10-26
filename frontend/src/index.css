@@ -3,6 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light mode - Blue accent theme */
+    --background: 210 40% 98%;
+    --foreground: 220 15% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 12%;
+    --primary: 210 85% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 220 15% 12%;
+    --muted: 210 15% 95%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 210 40% 92%;
+    --accent-foreground: 210 85% 30%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 90%;
+    --input: 220 15% 88%;
+    --ring: 210 85% 50%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Dark mode - Campsite aesthetic: deep black with soft dark blue accents */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 210 75% 55%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 210 60% 20%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 210 75% 50%;
+    --radius: 0.75rem;
+  }
+
   /* Global smooth scrolling */
   html {
     scroll-behavior: smooth;
@@ -10,7 +58,11 @@
   }
 
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-background text-foreground antialiased;
+    background-image: 
+      radial-gradient(circle at 20% 50%, hsl(var(--background)) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsl(var(--primary) / 0.15) 0%, transparent 40%);
+    background-attachment: fixed;
   }
 }
 
@@ -34,5 +86,23 @@
   /* Scroll padding for better anchor positioning */
   .scroll-mt-nav {
     scroll-margin-top: 6rem;
+  }
+
+  /* Glass morphism effect for cards */
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* Compact typography */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  /* Spacious layout */
+  .spacious-section {
+    padding: 3rem 0;
   }
 }

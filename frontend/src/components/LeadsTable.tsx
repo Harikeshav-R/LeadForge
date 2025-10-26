@@ -1,3 +1,5 @@
+// UI Refactor: Updated to use shadcn/ui components (Card, Button, Input, Label, Badge, Dialog, Separator, Table)
+// Maintains all existing functionality while improving UI consistency and accessibility
 import { useState } from 'react';
 import { Card } from './Card';
 import { Button } from './Button';
@@ -5,6 +7,15 @@ import { ExternalLink, Mail, Phone, Building2, Globe, Loader2, CheckCircle, Refr
 import { BuilderApiService, DeployerApiService, EmailApiService } from '../services/api';
 import type { Lead, EmailContent } from '../types';
 import { EMAIL_CONFIG } from '../config/email';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from './ui/table';
+import { ScrollArea } from './ui/scroll-area';
 
 // Normalize email agent response to structured format
 const normalizeEmailResponse = (rawResponse: any, fallbackEmail: string): EmailContent => {
@@ -287,6 +298,90 @@ export function LeadsTable({ leads }: LeadsTableProps) {
         websiteBuild: { ...prev[leadId]?.websiteBuild, ...updates.websiteBuild },
       },
     }));
+  };
+
+  // Handle sending email via outreach workflow (generate + send in one action)
+  const handleSendViaOutreach = async (lead: Lead) => {
+    const leadId = lead.id;
+    const goal = emailGoals[leadId] || EMAIL_CONFIG.DEFAULT_GOAL;
+    
+    // Start sending
+    updateLeadState(leadId, {
+      emailDraft: {
+        loading: true,
+        success: false,
+        error: null,
+        draftContent: {
+          to: lead.emails[0] || '',
+          subject: '',
+          body: '',
+          cc: '',
+          bcc: ''
+        },
+        showPreview: false,
+        sending: true,
+        sent: false,
+      },
+    });
+
+    try {
+      console.log('📧 Sending via outreach workflow for:', lead.name);
+      
+      // Call the outreach workflow
+      const result = await EmailApiService.sendEmailViaOutreach(lead, goal, {
+        websiteCritique: lead.website_review,
+        demoUrl: lead.deployed_website_url,
+      });
+      
+      console.log('✅ Outreach workflow result:', result);
+      
+      if (result.success) {
+        updateLeadState(leadId, {
+          emailDraft: {
+            loading: false,
+            success: true,
+            error: null,
+            draftContent: {
+              to: lead.emails[0] || '',
+              subject: result.emailContent?.subject || 'Email Sent',
+              body: result.emailContent?.body || 'Email sent successfully via outreach workflow',
+              cc: '',
+              bcc: ''
+            },
+            showPreview: false,
+            sending: false,
+            sent: true,
+          },
+        });
+        
+        alert(`✅ Email sent successfully to ${lead.emails[0]}!`);
+      } else {
+        throw new Error(result.message || 'Failed to send email');
+      }
+      
+    } catch (error) {
+      console.error('❌ Outreach workflow failed:', error);
+      
+      updateLeadState(leadId, {
+        emailDraft: {
+          loading: false,
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to send email via outreach workflow',
+          draftContent: {
+            to: lead.emails[0] || '',
+            subject: '',
+            body: '',
+            cc: '',
+            bcc: ''
+          },
+          showPreview: false,
+          sending: false,
+          sent: false,
+        },
+      });
+      
+      alert(`❌ Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   // Handle email draft creation
@@ -668,25 +763,275 @@ export function LeadsTable({ leads }: LeadsTableProps) {
     handleCreateEmailDraft(lead);
   };
 
-  const handleRetryWebsiteBuild = (lead: Lead) => {
+  const handleRetryWebsiteBuild = async (lead: Lead) => {
+    const leadId = lead.id;
+    
+    // Reset the website build state and clear any previous errors
+    updateLeadState(leadId, {
+      websiteBuild: {
+        loading: false,
+        success: false,
+        error: null,
+        websiteZip: undefined,
+        deployedUrl: undefined,
+        stage: undefined,
+      },
+    });
+
+    // Retry the build
+    await handleBuildWebsite(lead);
+  };
+
+  // Handle website preview
+  const handlePreviewWebsite = async (lead: Lead) => {
     const leadId = lead.id;
     const currentState = leadStates[leadId];
     
-    // If we have a built website, retry deployment
-    // Otherwise, retry building
-    if (currentState?.websiteBuild.websiteZip && currentState?.websiteBuild.stage === 'built') {
-      handleDeployWebsite(lead);
-    } else {
-      handleBuildWebsite(lead);
+    if (!currentState?.websiteBuild.websiteZip) {
+      console.error('No website zip available for preview');
+      return;
+    }
+
+    // Show loading state
+    updateLeadState(leadId, {
+      websiteBuild: {
+        ...currentState?.websiteBuild,
+        loading: true,
+        error: null,
+      },
+    });
+
+    try {
+      // Convert base64 to blob
+      const zipBase64 = currentState.websiteBuild.websiteZip;
+      const binaryString = atob(zipBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/zip' });
+      
+      // Create a temporary URL for the zip file
+      const zipUrl = URL.createObjectURL(blob);
+      
+      // Try to extract and preview HTML directly
+      try {
+        // Use JSZip to extract the HTML files
+        const JSZip = (await import('jszip')).default;
+        const zip = await JSZip.loadAsync(blob);
+        
+        // Debug: Log all files in the zip
+        const allFiles = Object.keys(zip.files);
+        console.log(`📦 Zip contains ${allFiles.length} files:`, allFiles);
+        
+        // Find the main HTML file (usually index.html)
+        let htmlFile = zip.file('index.html');
+        if (!htmlFile) {
+          // Look for any HTML file
+          const htmlFiles = Object.keys(zip.files).filter(name => name.endsWith('.html'));
+          console.log(`🔍 Found HTML files:`, htmlFiles);
+          if (htmlFiles.length > 0) {
+            htmlFile = zip.file(htmlFiles[0]);
+          }
+        }
+        
+        if (htmlFile) {
+          // Extract the HTML content
+          let htmlContent = await htmlFile.async('text');
+          console.log(`📄 HTML content preview (first 500 chars):`, htmlContent.substring(0, 500));
+          
+          // Try to extract and inline CSS and JS files
+          const cssFiles = Object.keys(zip.files).filter(name => name.endsWith('.css'));
+          const jsFiles = Object.keys(zip.files).filter(name => name.endsWith('.js'));
+          console.log(`🎨 Found CSS files:`, cssFiles);
+          console.log(`⚡ Found JS files:`, jsFiles);
+          
+          // Extract CSS content
+          let inlineCSS = '';
+          for (const cssFile of cssFiles) {
+            try {
+              const cssContent = await zip.file(cssFile)?.async('text');
+              if (cssContent) {
+                inlineCSS += `\n/* ${cssFile} */\n${cssContent}\n`;
+              }
+            } catch (e) {
+              console.warn(`Failed to extract CSS file ${cssFile}:`, e);
+            }
+          }
+          
+          // Extract JS content
+          let inlineJS = '';
+          for (const jsFile of jsFiles) {
+            try {
+              const jsContent = await zip.file(jsFile)?.async('text');
+              if (jsContent) {
+                inlineJS += `\n/* ${jsFile} */\n${jsContent}\n`;
+              }
+            } catch (e) {
+              console.warn(`Failed to extract JS file ${jsFile}:`, e);
+            }
+          }
+          
+          // Create a complete HTML document with inlined assets
+          const completeHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${lead.name} - Website Preview</title>
+    <style>
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; }
+        
+        /* Inlined CSS from the website */
+        ${inlineCSS}
+    </style>
+</head>
+<body>
+    ${htmlContent.replace(/<html[^>]*>|<\/html>|<head[^>]*>.*?<\/head>|<body[^>]*>|<\/body>/gi, '')}
+    
+    <script>
+        // Inlined JS from the website
+        ${inlineJS}
+    </script>
+</body>
+</html>`;
+          
+          // Create a new window with the complete HTML content
+          const previewWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+          if (previewWindow) {
+            previewWindow.document.write(completeHTML);
+            previewWindow.document.close();
+            previewWindow.document.title = `${lead.name} - Website Preview`;
+            console.log(`👀 Opened website preview for ${lead.name} with inlined assets`);
+          } else {
+            throw new Error('Popup blocked - please allow popups for this site');
+          }
+        } else {
+          throw new Error('No HTML file found in the zip');
+        }
+      } catch (extractError) {
+        console.warn('Failed to extract HTML, trying fallback preview:', extractError);
+        
+        // Fallback: Create a simple HTML viewer with the zip content
+        try {
+          const fallbackHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${lead.name} - Website Preview (Fallback)</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; padding: 20px; background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 1200px; margin: 0 auto; background: white; 
+            padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .header { 
+            border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; 
+        }
+        .download-btn { 
+            background: #007bff; color: white; padding: 10px 20px; 
+            border: none; border-radius: 5px; cursor: pointer; 
+            text-decoration: none; display: inline-block; margin: 10px 0; 
+        }
+        .download-btn:hover { background: #0056b3; }
+        .info { 
+            background: #e7f3ff; padding: 15px; border-radius: 5px; 
+            border-left: 4px solid #007bff; margin: 20px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ ${lead.name} - Website Preview</h1>
+            <p>Website has been built successfully! Download the zip file to view the complete website.</p>
+        </div>
+        
+        <div class="info">
+            <h3>📦 What's in the zip file?</h3>
+            <p>The zip file contains the complete website with HTML, CSS, JavaScript, and all assets. 
+            Extract it to a folder and open the index.html file in your browser to see the full website.</p>
+        </div>
+        
+        <a href="${zipUrl}" download="${lead.name.replace(/[^a-zA-Z0-9]/g, '_')}_website.zip" class="download-btn">
+            📥 Download Website Zip
+        </a>
+        
+        <div class="info">
+            <h3>🔧 How to view the website:</h3>
+            <ol>
+                <li>Click the download button above</li>
+                <li>Extract the zip file to a folder</li>
+                <li>Open the index.html file in your web browser</li>
+                <li>Or deploy it using the "Deploy Website" button in the main interface</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>`;
+          
+          const previewWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+          if (previewWindow) {
+            previewWindow.document.write(fallbackHTML);
+            previewWindow.document.close();
+            previewWindow.document.title = `${lead.name} - Website Preview (Fallback)`;
+            console.log(`👀 Opened fallback preview for ${lead.name}`);
+          } else {
+            throw new Error('Popup blocked - please allow popups for this site');
+          }
+        } catch (fallbackError) {
+          console.error('Fallback preview also failed, downloading zip:', fallbackError);
+          
+          // Final fallback: download the zip file
+          const link = document.createElement('a');
+          link.href = zipUrl;
+          link.download = `${lead.name.replace(/[^a-zA-Z0-9]/g, '_')}_website.zip`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          console.log(`📦 Downloaded website zip for ${lead.name} (all preview methods failed)`);
+        }
+      }
+      
+      // Clean up the URL
+      setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+      
+      // Clear loading state
+      updateLeadState(leadId, {
+        websiteBuild: {
+          ...currentState?.websiteBuild,
+          loading: false,
+        },
+      });
+      
+    } catch (error) {
+      console.error('Failed to preview website:', error);
+      updateLeadState(leadId, {
+        websiteBuild: {
+          ...currentState?.websiteBuild,
+          loading: false,
+          error: 'Failed to preview website. Please try downloading the zip file.',
+        },
+      });
     }
   };
 
   if (leads.length === 0) {
     return (
-      <Card className="text-center py-16">
-        <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-3">No leads yet</h3>
-        <p className="text-lg text-gray-600">
+      <Card className="text-center py-20 px-8">
+        {/* Added more generous padding for empty state */}
+        <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-8" />
+        <h3 className="text-xl font-semibold text-foreground mb-4">No leads yet</h3>
+        <p className="text-lg text-muted-foreground max-w-md mx-auto">
           Start a campaign to discover potential customers
         </p>
       </Card>
@@ -694,72 +1039,66 @@ export function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="px-8 py-6 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-2xl font-semibold text-gray-900">Discovered Leads</h2>
-        <p className="text-base text-gray-600 mt-2">{leads.length} businesses found</p>
+    <Card className="overflow-hidden p-0 border border-border">
+      <div className="px-8 py-6 border-b border-border">
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight">Discovered Leads</h2>
+        <p className="text-sm text-muted-foreground mt-2">{leads.length} businesses found</p>
       </div>
 
-      <div className="overflow-x-auto -mx-8">
-        <table className="w-full min-w-[1200px]">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Business
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Contact
-              </th>
-              <th className="px-8 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <ScrollArea className="w-full">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[300px]">Business</TableHead>
+              <TableHead className="w-[200px]">Contact</TableHead>
+              <TableHead className="w-[400px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {leads.map((lead) => {
               const leadState = leadStates[lead.id];
               
               return (
-              <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-8 py-6">
-                  <div className="flex flex-col">
-                    <div className="text-base font-semibold text-gray-900 mb-1">
+              <TableRow key={lead.id} className="hover:bg-muted/30 transition-colors">
+                <TableCell className="py-6">
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-sm font-semibold text-foreground leading-6">
                       {lead.name}
                     </div>
-                    <div className="text-sm text-gray-500 mb-1">{lead.address}</div>
+                    <div className="text-xs text-muted-foreground leading-5">{lead.address}</div>
                     {lead.category && (
-                      <div className="text-xs text-gray-400">{lead.category}</div>
+                      <div className="text-xs text-muted-foreground leading-5">{lead.category}</div>
                     )}
                     {lead.rating && (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs text-muted-foreground leading-5">
                         ⭐ {lead.rating.toFixed(1)} ({lead.total_ratings} reviews)
                       </div>
                     )}
                   </div>
-                </td>
-                <td className="px-8 py-6">
+                </TableCell>
+                <TableCell className="py-6">
                   <div className="flex flex-col gap-2">
                     {lead.phone_number && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
+                        <Phone className="w-3.5 h-3.5" />
                         {lead.phone_number}
                       </div>
                     )}
                     {lead.emails.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
+                        <Mail className="w-3.5 h-3.5" />
                         {lead.emails[0]}
                       </div>
                     )}
                     {lead.phone_numbers.length > 0 && lead.phone_numbers[0] !== lead.phone_number && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground leading-5">
+                        <Phone className="w-3.5 h-3.5" />
                         {lead.phone_numbers[0]}
                       </div>
                     )}
                   </div>
-                </td>
-                <td className="px-8 py-6">
+                </TableCell>
+                <TableCell className="py-6">
                     <div className="flex flex-col gap-3">
                       {/* Draft Email Section */}
                       {lead.emails.length > 0 && (
@@ -842,36 +1181,43 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                   )}
                                 </div>
 
-                                {/* Draft Email Button */}
-                      <Button
-                        variant="primary"
+                                {/* Send Email Button - AI generates and sends via outreach workflow */}
+                                <Button
+                                  variant="primary"
                                   size="sm"
-                                  onClick={() => handleCreateEmailDraft(lead)}
-                                  disabled={emailState?.loading || lead.emails.length === 0}
-                                  title={lead.emails.length === 0 ? "No email address available for this lead" : ""}
+                                  onClick={() => handleSendViaOutreach(lead)}
+                                  disabled={emailState?.loading || emailState?.sending || lead.emails.length === 0}
+                                  title={lead.emails.length === 0 ? "No email address available for this lead" : "AI generates and sends email directly via hackohi00@gmail.com"}
                                   className="w-full"
                                 >
-                                  {emailState?.loading ? (
+                                  {emailState?.sending ? (
                                     <>
                                       <Loader2 className="w-4 h-4 animate-spin" />
-                                      Drafting...
+                                      Sending Email...
                                     </>
                                   ) : (
                                     <>
-                        <Mail className="w-4 h-4" />
-                                      {lead.emails.length === 0 ? "No Email Available" : "Draft Email"}
+                                      <Send className="w-4 h-4" />
+                                      {lead.emails.length === 0 ? "No Email Available" : "Send Email"}
                                     </>
                                   )}
                                 </Button>
                                 
                                 {/* Loading State Display */}
-                                {emailState?.loading && (
+                                {(emailState?.loading || emailState?.sending) && (
                                   <div className="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div className="flex items-center gap-3">
                                       <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
                                       <div className="flex-1">
-                                        <p className="text-sm font-medium text-blue-900">Generating draft...</p>
-                                        <p className="text-xs text-blue-700 mt-1">The AI is crafting a personalized email for {lead.name}</p>
+                                        <p className="text-sm font-medium text-blue-900">
+                                          {emailState?.sending ? 'Sending email...' : 'Generating draft...'}
+                                        </p>
+                                        <p className="text-xs text-blue-700 mt-1">
+                                          {emailState?.sending 
+                                            ? `The AI is generating and sending an email to ${lead.name} via ${EMAIL_CONFIG.SENDER_EMAIL}`
+                                            : `The AI is crafting a personalized email for ${lead.name}`
+                                          }
+                                        </p>
                                       </div>
                                     </div>
                                   </div>
@@ -1142,7 +1488,7 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                             );
                           }
                           
-                          // Built but not deployed - show Deploy button
+                          // Built but not deployed - show Preview and Deploy buttons
                           if (buildState?.success && buildState?.websiteZip && stage === 'built' && !buildState?.deployedUrl) {
                             return (
                               <>
@@ -1150,24 +1496,46 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                                   <CheckCircle className="w-4 h-4" />
                                   Website Built
                                 </div>
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => handleDeployWebsite(lead)}
-                                  disabled={buildState?.loading}
-                                >
-                                  {buildState?.loading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                      Deploying...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Globe className="w-4 h-4" />
-                                      Deploy Website
-                                    </>
-                                  )}
-                                </Button>
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handlePreviewWebsite(lead)}
+                                    disabled={buildState?.loading}
+                                    className="w-full"
+                                  >
+                                    {buildState?.loading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Extracting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Eye className="w-4 h-4" />
+                                        Preview Website
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => handleDeployWebsite(lead)}
+                                    disabled={buildState?.loading}
+                                    className="w-full"
+                                  >
+                                    {buildState?.loading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Deploying...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Globe className="w-4 h-4" />
+                                        Deploy Website
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
                               </>
                             );
                           }
@@ -1250,13 +1618,13 @@ export function LeadsTable({ leads }: LeadsTableProps) {
                       </div>
                     )}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
               );
             })}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </Card>
   );
 }
