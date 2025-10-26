@@ -1,21 +1,58 @@
-from fastapi import FastAPI
+import json
+import uuid
+
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.websockets import WebSocket
+from loguru import logger
+from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.agents import create_compiled_state_graph
 from app.api import api_router
 from app.core import Config, Base, engine, get_db
+from app.tools import phone_call
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-app.include_router(api_router)
 
 if Config.DEBUG:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=["*"],  # Allow all origins for testing
         allow_credentials=True,
-        allow_methods=["*"],  # Allows all standard HTTP methods (GET, POST, PUT, DELETE, etc.)
-        allow_headers=["*"],  # Allows all headers in the request
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+app.include_router(api_router)
+
+
+@app.websocket("/ws/{state_id}")
+async def websocket_endpoint(*, websocket: WebSocket, state_id: uuid.UUID, db: Session = Depends(get_db)):
+    await websocket.accept()
+    start_data = websocket.iter_text()
+    await start_data.__anext__()
+    call_data = json.loads(await start_data.__anext__())
+
+    logger.info(call_data)
+
+    stream_sid = call_data["start"]["streamSid"]
+    call_sid = call_data["start"]["callSid"]
+    account_sid = call_data["start"]["accountSid"]
+    auth_token = Config.TWILIO_AUTH_TOKEN
+
+    logger.success("WebSocket connection accepted")
+
+    state: schemas.State = schemas.State.model_validate(crud.read_state(db, state_id))
+
+    await phone_call(
+        websocket,
+        stream_sid,
+        call_sid,
+        account_sid,
+        auth_token,
+        state.client_name,
+        state.website_critique
     )

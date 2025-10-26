@@ -18,3 +18,9 @@ class Config:
 
     SENDER_EMAIL_ADDRESS: str = os.getenv("SENDER_EMAIL_ADDRESS")
     SENDER_EMAIL_PASSWORD: str = os.getenv("SENDER_EMAIL_PASSWORD")
+
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER")
+
+    BASE_WS_URL: str = os.getenv("BASE_WS_URL")

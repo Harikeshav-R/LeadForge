@@ -26,8 +26,8 @@ def create_workflow(init_state_data: schemas.StateCreate, db: Session = Depends(
     db_initial_state = crud.create_state(db, state_data=initial_state_create)
 
     # Create the final state
-    final_state_create = schemas.StateCreate(**final_state.model_dump())
-    db_final_state = crud.create_state(db, state_data=final_state_create)
+    final_state_create = schemas.StateUpdate(**final_state.model_dump())
+    db_final_state = crud.update_state(db, final_state.id, final_state_create)
 
     # --- Step 4: Save the Workflow ---
 

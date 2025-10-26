@@ -17,6 +17,7 @@ class State(Base):
 
     client_name = Column(String, nullable=False)
     client_email = Column(String, nullable=False)
+    client_phone_number = Column(String, nullable=False)
 
     sender_name = Column(String, nullable=False)
     sender_title = Column(String, nullable=False)
