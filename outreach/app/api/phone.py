@@ -19,7 +19,7 @@ async def start_call():
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, session_id: uuid.UUID = Query(...), db: Session = Depends(get_db)):
+async def websocket_endpoint(websocket: WebSocket, state_id: uuid.UUID = Query(...), db: Session = Depends(get_db)):
     await websocket.accept()
     start_data = websocket.iter_text()
     await start_data.__anext__()
@@ -34,7 +34,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: uuid.UUID = Query
 
     logger.success("WebSocket connection accepted")
 
-    state: schemas.State = schemas.State.model_validate(crud.read_state(db, session_id))
+    state: schemas.State = schemas.State.model_validate(crud.read_state(db, state_id))
 
     await phone_call(
         websocket,
