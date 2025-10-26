@@ -8,7 +8,8 @@ def start_phone_call_node(state: State) -> State:
         Config.TWILIO_ACCOUNT_SID,
         Config.TWILIO_AUTH_TOKEN,
         Config.TWILIO_PHONE_NUMBER,
-        state.client_phone_number
+        state.client_phone_number,
+        state.id
     )
 
     return state.model_copy()
