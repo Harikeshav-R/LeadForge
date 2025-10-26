@@ -29,8 +29,6 @@ class State(Base):
 
     email_sent = Column(Boolean, default=False, nullable=False)
 
-    phone_call_system_instructions = Column(Text, nullable=True)
-
     # Foreign key to link to the Mail table
     # This assumes a State can have one optional email
     email_id = Column(Uuid, ForeignKey("mail.id"), nullable=True)

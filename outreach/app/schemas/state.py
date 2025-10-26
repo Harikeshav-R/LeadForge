@@ -23,8 +23,6 @@ class StateBase(BaseModel):
     email_contents: Mail | None = Field(None, description="The email contents to send.")
     email_sent: bool = Field(False, description="Whether the email has been sent.")
 
-    phone_call_system_instructions: str | None = Field(None, description="Instructions for the phone call system.")
-
 
 class StateCreate(StateBase):
     pass
@@ -48,11 +46,9 @@ class StateUpdate(BaseModel):
     email_contents: Mail | None = Field(None, description="The email contents to send.")
     email_sent: bool | None = Field(None, description="Whether the email has been sent.")
 
-    phone_call_system_instructions: str | None = Field(None, description="Instructions for the phone call system.")
-
 
 class State(StateBase):
-    id: uuid.UUID = Field(uuid.uuid4, description="ID of the state.")
+    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the state.")
 
     class Config:
         from_attributes = True
