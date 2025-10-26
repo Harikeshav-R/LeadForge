@@ -119,7 +119,7 @@ Response: "I've actually just sent it. But to give you context, it won't make mu
 
 
 async def phone_call(websocket_client: WebSocket, stream_sid: str, call_sid: str, account_sid: str, auth_token: str,
-                     client_name: str, website_critique: str, your_company_name: str):
+                     client_name: str, website_critique: str):
     transport = FastAPIWebsocketTransport(
         websocket=websocket_client,
         params=FastAPIWebsocketParams(
@@ -148,7 +148,7 @@ async def phone_call(websocket_client: WebSocket, stream_sid: str, call_sid: str
 Here is your information:
 CLIENT_COMPANY_NAME: {client_name}
 WEBSITE_CRITIQUE: {website_critique}
-YOUR_COMPANY_NAME: {your_company_name}
+YOUR_COMPANY_NAME: LeadForge
 YOUR_COMPANY_SERVICES: custom web design, full-stack development, e-commerce solutions, and mobile-responsive builds, React and Node.js development, headless CMS integration, UI/UX design, and performance optimization, EO-optimized web design, lead-generation websites, e-commerce stores, and ongoing maintenance & support, professional website design, custom web development, and mobile optimization
 """
             }
