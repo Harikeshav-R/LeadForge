@@ -1,5 +1,4 @@
 import os
-import json
 import pathlib
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException
