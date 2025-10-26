@@ -6,8 +6,8 @@ from loguru import logger
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
-from app import schemas, crud, Config
-from app.core import get_db
+from app import schemas, crud
+from app.core import Config, get_db
 from app.tools import phone_call
 
 router = APIRouter()
