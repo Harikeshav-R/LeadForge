@@ -8,6 +8,7 @@ from app.schemas.mail import Mail
 class StateBase(BaseModel):
     client_name: str = Field(..., description="The name of the client.")
     client_email: str = Field(..., description="The email of the client.")
+    client_phone_number: str = Field(..., description="The phone number of the client.")
 
     sender_name: str = Field(..., description="The name of the sender.")
     sender_title: str = Field(..., description="The job title of the sender.")
@@ -22,22 +23,32 @@ class StateBase(BaseModel):
     email_contents: Mail | None = Field(None, description="The email contents to send.")
     email_sent: bool = Field(False, description="Whether the email has been sent.")
 
+    phone_call_system_instructions: str | None = Field(None, description="Instructions for the phone call system.")
+
 
 class StateCreate(StateBase):
     pass
 
 
 class StateUpdate(BaseModel):
-    web_agency_name: str | None = Field(None, description="The name of the web agency.")
-    web_agency_logo: str | None = Field(None, description="The URL of the web agency logo.")
+    client_name: str | None = Field(None, description="The name of the client.")
+    client_email: str | None = Field(None, description="The email of the client.")
+    client_phone_number: str | None = Field(None, description="The phone number of the client.")
+
     sender_name: str | None = Field(None, description="The name of the sender.")
     sender_title: str | None = Field(None, description="The job title of the sender.")
+
     website_critique: str | None = Field(None,
                                          description="A detailed analysis of the critical issues and outdated elements of their current website.")
     demo_url: str | None = Field(None,
                                  description="The link to the new, modern prototype website our agency has built for them.")
+    web_agency_name: str | None = Field(None, description="The name of the web agency.")
+    web_agency_logo: str | None = Field(None, description="The URL of the web agency logo.")
+
     email_contents: Mail | None = Field(None, description="The email contents to send.")
     email_sent: bool | None = Field(None, description="Whether the email has been sent.")
+
+    phone_call_system_instructions: str | None = Field(None, description="Instructions for the phone call system.")
 
 
 class State(StateBase):
