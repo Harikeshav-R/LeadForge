@@ -1,3 +1,7 @@
+import urllib
+import uuid
+from urllib import parse
+
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.frames.frames import EndFrame
 from pipecat.pipeline.pipeline import Pipeline
@@ -68,11 +72,26 @@ async def phone_call(websocket_client: WebSocket, stream_sid: str, call_sid: str
     await runner.run(task)
 
 
-def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, to_phone_number: str):
+def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, to_phone_number: str,
+                     state_id: uuid.UUID):
     client = Client(account_sid, auth_token)
 
+    state_id = str(state_id)
+    safe_state_id = urllib.parse.quote(state_id)
+
+    ws_url = f"{Config.BASE_WS_URL}?state_id={safe_state_id}"
+
+    twiml_string = (
+        f'<Response>'
+        f'  <Connect>'
+        f'    <Stream url="{ws_url}" />'
+        f'  </Connect>'
+        f'  <Pause length="30"/>'
+        f'</Response>'
+    )
+
     call = client.calls.create(
-        twiml=open("templates/streams.xml").read(),
+        twiml=twiml_string,
         to=to_phone_number,
         from_=from_phone_number
     )
