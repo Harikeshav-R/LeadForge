@@ -2,15 +2,16 @@ import urllib
 import uuid
 from urllib import parse
 
+from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.frames.frames import EndFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
-from pipecat.processors.aggregators.llm_context import OpenAILLMContext
+from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
 from pipecat.serializers.twilio import TwilioFrameSerializer
 from pipecat.services.gemini_multimodal_live.gemini import GeminiMultimodalLiveLLMService
-from pipecat.transports.network.fastapi_websocket import (
+from pipecat.transports.websocket.fastapi import (
     FastAPIWebsocketParams,
     FastAPIWebsocketTransport,
 )
@@ -139,12 +140,15 @@ async def phone_call(websocket_client: WebSocket, stream_sid: str, call_sid: str
         transcribe_model_audio=True,  # Enable speech-to-text for model responses
     )
 
+    logger.info("Initializing Gemini client from Config...")
+
     context = OpenAILLMContext(
         [
             {
                 "role": "user",
                 "content": \
                     f"""
+Say hello and introduce yourself and your purpose.
 Here is your information:
 CLIENT_COMPANY_NAME: {client_name}
 WEBSITE_CRITIQUE: {website_critique}
@@ -188,12 +192,15 @@ def start_phone_call(account_sid: str, auth_token: str, from_phone_number: str, 
     state_id = str(state_id)
     safe_state_id = urllib.parse.quote(state_id)
 
-    ws_url = f"{Config.BASE_WS_URL}?state_id={safe_state_id}"
+    ws_url = f"{Config.BASE_WS_URL}/ws/{safe_state_id}"
+
+    logger.info(f"Starting phone call with WS URL: {ws_url}")
 
     twiml_string = (
+        f'<?xml version="1.0" encoding="UTF-8"?>'
         f'<Response>'
         f'  <Connect>'
-        f'    <Stream url="{ws_url}" />'
+        f'    <Stream url="{ws_url}"></Stream>'
         f'  </Connect>'
         f'  <Pause length="30"/>'
         f'</Response>'
