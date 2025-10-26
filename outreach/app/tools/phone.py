@@ -2,6 +2,7 @@ import urllib
 import uuid
 from urllib import parse
 
+from fastapi.websockets import WebSocket
 from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.frames.frames import EndFrame
@@ -15,7 +16,6 @@ from pipecat.transports.websocket.fastapi import (
     FastAPIWebsocketParams,
     FastAPIWebsocketTransport,
 )
-from starlette.websockets import WebSocket
 from twilio.rest import Client
 
 from app.core import Config
