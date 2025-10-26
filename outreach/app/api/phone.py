@@ -1,5 +1,4 @@
 import json
-import os
 import uuid
 
 from fastapi import WebSocket, APIRouter, Depends, Query
@@ -7,7 +6,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
-from app import schemas, crud
+from app import schemas, crud, Config
 from app.core import get_db
 from app.tools import phone_call
 
@@ -31,7 +30,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: uuid.UUID = Query
     stream_sid = call_data["start"]["streamSid"]
     call_sid = call_data["start"]["callSid"]
     account_sid = call_data["start"]["accountSid"]
-    auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+    auth_token = Config.TWILIO_AUTH_TOKEN
 
     logger.success("WebSocket connection accepted")
 
