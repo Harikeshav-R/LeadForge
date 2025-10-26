@@ -106,7 +106,9 @@ def transcribe_and_analyze_audio(audio_data: bytes) -> PhoneAnalysisOutput:
         HumanMessage(
             content=[
                 {"type": "text",
-                 "text": f"The time the call was made is {str(datetime.datetime.now())}. Here is the recording of the audio call:"},
+                 "text": f"The time the call was made is {str(datetime.datetime.now())}. "
+                         f"The day of the week today is {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][datetime.datetime.now().weekday()]}."
+                         f"Here is the recording of the audio call:"},
                 {
                     "type": "media",
                     "data": base64.b64encode(audio_data).decode("utf-8"),
