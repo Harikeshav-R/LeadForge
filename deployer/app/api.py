@@ -121,6 +121,17 @@ async def get_site_index(site_id: str):
     return FileResponse(index_file)
 
 
+@router.get("/demo-website/")
+async def get_demo_website():
+    site_dir = os.path.join(Config.DEPLOYED_SITES_DIR, "test")
+    index_file = os.path.join(site_dir, "index.html")
+
+    if not os.path.isfile(index_file):
+        raise HTTPException(status_code=404, detail="Site not found or index.html is missing.")
+
+    return FileResponse(index_file)
+
+
 @router.get("/sites/{site_id}/{file_path:path}")
 async def get_site_file(site_id: str, file_path: str):
     try:
