@@ -10,6 +10,13 @@ from app.schemas.state import State
 
 def create_compiled_state_graph() -> CompiledStateGraph:
     workflow = StateGraph(State)
+    # workflow.add_node("save_intermediate_state_node", save_intermediate_state_node)
+    # workflow.add_node("start_phone_call_node", start_phone_call_node)
+    #
+    # workflow.set_entry_point("save_intermediate_state_node")
+    # workflow.add_edge("save_intermediate_state_node", "start_phone_call_node")
+    # workflow.set_finish_point("start_phone_call_node")
+
     workflow.add_node("draft_email_node", draft_email_node)
     workflow.add_node("send_mail_node", send_mail_node)
     workflow.add_node("save_intermediate_state_node", save_intermediate_state_node)
