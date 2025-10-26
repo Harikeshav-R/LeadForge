@@ -35,7 +35,7 @@ class StateUpdate(BaseModel):
 
 
 class State(StateBase):
-    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the state.")
+    id: uuid.UUID = Field(uuid.uuid4, description="ID of the state.")
 
     class Config:
         from_attributes = True

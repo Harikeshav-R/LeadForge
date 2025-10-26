@@ -17,7 +17,7 @@ class WebsiteUpdate(BaseModel):
 
 
 class Website(Website):
-    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the website.")
+    id: uuid.UUID = Field(uuid.uuid4, description="ID of the website.")
     url: Optional[str] = Field(None, description="URL of the deployed website.")
 
     class Config:

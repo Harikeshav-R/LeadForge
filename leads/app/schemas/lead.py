@@ -62,8 +62,8 @@ class LeadUpdate(BaseModel):
 
 
 class Lead(LeadBase):
-    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the lead.")
-    state_id: uuid.UUID = Field(uuid.uuid4(), description="ID of the state to which the lead belongs.")
+    id: uuid.UUID = Field(uuid.uuid4, description="ID of the lead.")
+    state_id: uuid.UUID = Field(uuid.uuid4, description="ID of the state to which the lead belongs.")
 
     class Config:
         from_attributes = True

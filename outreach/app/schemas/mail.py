@@ -32,7 +32,7 @@ class MailUpdate(BaseModel):
 
 
 class Mail(MailBase):
-    id: uuid.UUID = Field(uuid.uuid4(), description="ID of the mail.")
+    id: uuid.UUID = Field(uuid.uuid4, description="ID of the mail.")
 
     recipient_email_address: str = Field(..., description="The email address of the recipient.")
 
