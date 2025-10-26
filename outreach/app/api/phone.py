@@ -1,10 +1,14 @@
 import json
 import os
+import uuid
 
-from fastapi import WebSocket, APIRouter, Depends
+from fastapi import WebSocket, APIRouter, Depends, Query
 from loguru import logger
+from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from app import schemas, crud
+from app.core import get_db
 from app.tools import phone_call
 
 router = APIRouter()
@@ -16,7 +20,7 @@ async def start_call():
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, session_id: uuid.UUID = Query(...), db: Session = Depends(get_db)):
     await websocket.accept()
     start_data = websocket.iter_text()
     await start_data.__anext__()
@@ -31,4 +35,14 @@ async def websocket_endpoint(websocket: WebSocket):
 
     logger.success("WebSocket connection accepted")
 
-    await phone_call(websocket, stream_sid, call_sid, account_sid, auth_token)
+    state: schemas.State = schemas.State.model_validate(crud.read_state(db, session_id))
+
+    await phone_call(
+        websocket,
+        stream_sid,
+        call_sid,
+        account_sid,
+        auth_token,
+        state.client_name,
+        state.website_critique
+    )
