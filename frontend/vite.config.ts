@@ -10,12 +10,6 @@ export default defineConfig({
         },
         host: true, // Here
         strictPort: true,
-<<<<<<< HEAD
         port: 5173,
     }
 })
-=======
-        port: 5174,
-    }
-})
->>>>>>> main-holder

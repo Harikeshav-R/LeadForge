@@ -121,7 +121,6 @@ async def get_site_index(site_id: str):
     return FileResponse(index_file)
 
 
-<<<<<<< HEAD
 @router.get("/demo-website/")
 async def get_demo_website():
     site_dir = os.path.join(Config.DEPLOYED_SITES_DIR, "test")
@@ -132,9 +131,6 @@ async def get_demo_website():
 
     return FileResponse(index_file)
 
-
-=======
->>>>>>> main-holder
 @router.get("/sites/{site_id}/{file_path:path}")
 async def get_site_file(site_id: str, file_path: str):
     try:
